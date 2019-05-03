@@ -1,0 +1,23 @@
+[
+  {
+    "type": "Linux",
+    "arch": "x86_64",
+    "extension": "zip",
+    "downloadUrl": "http://download.glitchless.ru/jres/jre_1.8_linux_x64.zip",
+    "javaRelativePath": "jre_1.8_linux_x64/bin/java"
+  },
+  {
+    "type": "Windows",
+    "arch": "x86_64",
+    "extension": "zip",
+    "downloadUrl": "http://download.glitchless.ru/jres/jre_1.8_windows_x64.zip",
+    "javaRelativePath": "jre_1.8_windows_x64/bin/java.exe"
+  },
+  {
+    "type": "macOS",
+    "arch": "x86_64",
+    "extension": "zip",
+    "downloadUrl": "http://download.glitchless.ru/jres/jre_1.8_mac_x64.zip",
+    "javaRelativePath": "jre_1.8_mac_x64/bin/java"
+  }
+]
