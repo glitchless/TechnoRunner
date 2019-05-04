@@ -23,6 +23,7 @@ fun main() {
 
     val processBuilder =
             ProcessBuilder(javaPath, "-jar", DirectoryHelper.getLauncherFile().absolutePath)
+    println("Execute command: ${processBuilder.command()}")
     processBuilder.directory(DirectoryHelper.getDefaultDirectory())
     processBuilder.redirectError(File("launchererr.log"))
     processBuilder.redirectOutput(File("launcherout.log"))

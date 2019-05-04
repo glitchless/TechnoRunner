@@ -21,12 +21,11 @@ class JavaDownloader {
     fun initDownloader() {
         val json = HttpUtils.httpGet(JRE_JSON_URL)
         val os = OperatingSystem.getOperatingSystem()
-
         javaBinary =
-            gson.fromJson<List<JavaBinaryModel>>(json, object : TypeToken<List<JavaBinaryModel>>() {}.type).find {
-                OperatingSystem.getOperatingSystem(it.type) == os.type &&
-                        Arch.getArch(it.arch) == os.arch
-            }
+                gson.fromJson<List<JavaBinaryModel>>(json, object : TypeToken<List<JavaBinaryModel>>() {}.type).find {
+                    OperatingSystem.getOperatingSystem(it.type) == os.type &&
+                            Arch.getArch(it.arch) == os.arch
+                }
     }
 
     fun downloadJava(monitor: IProgressMonitor): File? {
@@ -36,6 +35,7 @@ class JavaDownloader {
         val jreFile = File(DirectoryHelper.getTemporaryDirectory(), "jre.${javaBinary!!.extension}")
         monitor.setStatus("Downloading jre...")
         FileUtils.downloadFileWithProgress(javaBinary!!.downloadUrl, jreFile, monitor)
+        println("Jre file download: ${jreFile.absoluteFile}")
 
         monitor.setStatus("Unzipping jre...")
         monitor.setProgress(-1)
@@ -43,6 +43,7 @@ class JavaDownloader {
             ArchiverFactory.createArchiver(ArchiveFormat.ZIP)
         } else ArchiverFactory.createArchiver(ArchiveFormat.TAR, CompressionType.GZIP)
         archiver.extract(jreFile, DirectoryHelper.getJavaDirectory())
+        println("Jre directory: ${DirectoryHelper.getJavaDirectory()}")
         return File(DirectoryHelper.getJavaDirectory(), javaBinary!!.javaRelativePath)
     }
 }
