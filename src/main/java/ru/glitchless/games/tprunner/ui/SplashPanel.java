@@ -1,4 +1,4 @@
-package utils;
+package ru.glitchless.games.tprunner.ui;
 
 import javax.swing.*;
 import java.awt.*;

@@ -1,11 +1,11 @@
-package utils
+package ru.glitchless.games.tprunner.ui
 
 import sk.tomsik68.mclauncher.api.ui.IProgressMonitor
 import java.awt.*
 import javax.imageio.ImageIO
 import javax.swing.*
 
-class SplashScreen() : JFrame(), IProgressMonitor {
+class SplashScreen : JFrame(), IProgressMonitor {
     private val progressBar = JProgressBar()
     private val label = JLabel()
     private var current = 0
