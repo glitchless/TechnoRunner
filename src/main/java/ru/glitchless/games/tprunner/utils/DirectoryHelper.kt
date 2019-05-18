@@ -46,11 +46,11 @@ object DirectoryHelper {
     }
 
     fun getLauncherOutLogFile(): File {
-        return File("launcherout.log")
+        return File(getDefaultDirectory(), "launcherout.log")
     }
 
     fun getLauncherErrLogFile(): File {
-        return File("launchererr.log")
+        return File(getDefaultDirectory(), "launchererr.log")
     }
 }
 
