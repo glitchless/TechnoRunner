@@ -14,12 +14,12 @@ runner-macos: dir-build
 	./gradlew build
 
 runner-windows: dir-build
-	./gradlew.bat build
+	.\gradlew.bat build
 
 
 # jre
 build/jre-linux.tar.gz: dir-build
-	wget https://minecraft.glitchless.ru/jres/jre-8u202-linux-x64.tar.gz -O build/jre-linux.tar.gz
+	wget https://minecraft.glitchless.ru/jres/jre-8u202-linux-i586.tar.gz -O build/jre-linux.tar.gz
 
 build/jrepath-linux.txt: dir-build
 	echo 'jre1.8.0_202/bin/java' > build/jrepath-linux.txt
@@ -35,7 +35,7 @@ build/jrepath-macos.txt: dir-build
 jre-macos: build/jre-macos.tar.gz build/jrepath-macos.txt
 
 build/jre-windows.tar.gz: dir-build
-	wget https://minecraft.glitchless.ru/jres/jre-8u202-windows-x64.tar.gz -O build/jre-windows.tar.gz
+	wget https://minecraft.glitchless.ru/jres/jre-8u202-windows-i586.tar.gz -O build/jre-windows.tar.gz
 
 build/jrepath-windows.txt: dir-build
 	echo 'jre1.8.0_202/bin/java.txt' > build/jrepath-windows.txt

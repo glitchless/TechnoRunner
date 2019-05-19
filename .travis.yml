@@ -15,6 +15,8 @@ matrix:
         - git clone https://github.com/portapps/portapps ${TRAVIS_BUILD_DIR}/../portapps
         - source ${TRAVIS_BUILD_DIR}/../portapps/.travis/prepare.sh
         - bash ${TRAVIS_BUILD_DIR}/../portapps/.travis/java.sh
+        - export CC=gcc
+        - export CXX=g++
         - cmd.exe /C '.\.travis\install-zlib.bat' || cat install.log
       install: choco install mingw
       script:
