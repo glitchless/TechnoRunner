@@ -8,10 +8,10 @@ import nu.redpois0n.oslib.OperatingSystem
 import org.rauschig.jarchivelib.ArchiveFormat
 import org.rauschig.jarchivelib.ArchiverFactory
 import org.rauschig.jarchivelib.CompressionType
+import ru.glitchless.games.tprunner.utils.DirectoryHelper
 import sk.tomsik68.mclauncher.api.ui.IProgressMonitor
 import sk.tomsik68.mclauncher.util.FileUtils
 import sk.tomsik68.mclauncher.util.HttpUtils
-import ru.glitchless.games.tprunner.utils.DirectoryHelper
 import java.io.File
 
 private const val JRE_JSON_URL = "https://minecraft.glitchless.ru/jres.json"
@@ -36,12 +36,11 @@ class JavaDownloader {
         }
 
         val jreFile = File(DirectoryHelper.getTemporaryDirectory(), "jre.${javaBinary!!.extension}")
-        monitor.setStatus("Downloading jre...")
+        monitor.setStatus("Загрузка Java...")
         FileUtils.downloadFileWithProgress(javaBinary!!.downloadUrl, jreFile, monitor)
         println("Jre file download: ${jreFile.absoluteFile}")
+        monitor.setProgress(100)
 
-        monitor.setStatus("Unzipping jre...")
-        monitor.setProgress(-1)
         val archiver =
                 if (javaBinary!!.extension.equals("zip", true)) {
                     ArchiverFactory.createArchiver(ArchiveFormat.ZIP)

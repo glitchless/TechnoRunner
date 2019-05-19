@@ -1,12 +1,12 @@
 package ru.glitchless.games.tprunner.download
 
-import ru.glitchless.games.tprunner.utils.DirectoryHelper
 import com.google.gson.Gson
 import com.google.gson.annotations.SerializedName
+import ru.glitchless.games.tprunner.utils.DirectoryHelper
+import ru.glitchless.games.tprunner.utils.HashUtils
 import sk.tomsik68.mclauncher.api.ui.IProgressMonitor
 import sk.tomsik68.mclauncher.util.FileUtils
 import sk.tomsik68.mclauncher.util.HttpUtils
-import ru.glitchless.games.tprunner.utils.HashUtils
 import java.io.File
 
 private const val LAUNCHER_JSON_URL = "https://minecraft.glitchless.ru/launcher.json"
@@ -42,9 +42,10 @@ class LauncherDownloader {
             return
         }
 
-        monitor.setStatus("Downloading launcher...")
-        val updateFile = File(DirectoryHelper.getTemporaryDirectory(), "update_launcher.jar");
+        monitor.setStatus("Скачивание лаунчера...")
+        val updateFile = File(DirectoryHelper.getTemporaryDirectory(), "update_launcher.jar")
         FileUtils.downloadFileWithProgress(launcherModel!!.downloadUrl, updateFile, monitor)
+        monitor.setProgress(100)
 
         if (HashUtils.generateSHA256(updateFile) != launcherModel!!.sha256) {
             return

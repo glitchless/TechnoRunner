@@ -2,45 +2,89 @@ package ru.glitchless.games.tprunner.ui
 
 import sk.tomsik68.mclauncher.api.ui.IProgressMonitor
 import java.awt.*
+import java.awt.event.MouseAdapter
+import java.awt.event.MouseEvent
 import javax.imageio.ImageIO
 import javax.swing.*
 
 class SplashScreen : JFrame(), IProgressMonitor {
-    private val progressBar = JProgressBar()
-    private val label = JLabel()
+    private val progressBar: JProgressBar
+    private val label: JLabel
     private var current = 0
 
     init {
-        val image = ImageIO.read(javaClass.getResource("/minelogo.png"))
+        val backgroundPanel = makeBackgroundPanel()
+        contentPane.add(backgroundPanel, BorderLayout.NORTH)
 
-        label.verticalAlignment = JLabel.BOTTOM
-        label.horizontalAlignment = JLabel.CENTER
+        val (statusPanel, progressBar, label) = makeStatusPanel()
+        this.progressBar = progressBar
+        this.label = label
+        contentPane.add(statusPanel, BorderLayout.SOUTH)
 
-        val font = Font.createFont(Font.TRUETYPE_FONT, javaClass.getResource("/Gugi-Regular.ttf").openStream())
-        GraphicsEnvironment.getLocalGraphicsEnvironment().registerFont(font)
-        label.font = font.deriveFont(16f)
-        label.foreground = Color.WHITE
+        prepareWindow()
+    }
 
-        progressBar.background = Color.WHITE
-        progressBar.foreground = Color.GREEN
+    private fun makeBackgroundPanel(): JPanel {
+        val root = JPanel()
+        root.layout = OverlayLayout(root)
 
-        this.title = "Loading..."
-        this.isUndecorated = true
-        this.defaultCloseOperation = WindowConstants.EXIT_ON_CLOSE
-        this.setSize(image.getWidth(this), image.getHeight(this))
-        this.setLocationRelativeTo(null)
-        contentPane = SplashPanel(image)
+        val closeBtnPanel = JPanel()
+        closeBtnPanel.layout = null
+        closeBtnPanel.isOpaque = false
+        root.add(closeBtnPanel)
 
-        val panel = JPanel()
-        panel.layout = BoxLayout(panel, BoxLayout.Y_AXIS)
-        panel.isOpaque = false
-        label.alignmentX = Component.CENTER_ALIGNMENT
-        progressBar.alignmentX = Component.CENTER_ALIGNMENT
-        progressBar.maximumSize = Dimension(300, Integer.MAX_VALUE)
-        panel.add(label)
-        panel.add(progressBar)
-        contentPane.add(panel, BorderLayout.SOUTH)
+        val closeBtnImage = ImageIO.read(javaClass.getResource("/close-btn.png"))
+        val closeBtnIcon = ImageIcon(closeBtnImage)
+        val closeBtn = JLabel(closeBtnIcon)
+        closeBtn.setSize(closeBtnImage.width, closeBtnImage.height)
+        closeBtn.cursor = Cursor.getPredefinedCursor(Cursor.HAND_CURSOR)
+        closeBtn.addMouseListener(object : MouseAdapter() {
+            override fun mouseClicked(e: MouseEvent) {
+                System.exit(0)
+            }
+        })
+        closeBtnPanel.add(closeBtn)
 
+        val backgroundImage = ImageIO.read(javaClass.getResource("/background.jpg"))
+        val backgroundIcon = ImageIcon(backgroundImage)
+        val background = JLabel(backgroundIcon)
+        root.add(background)
+
+        closeBtn.setLocation(backgroundImage.width - closeBtnImage.width - 25, 25)
+
+        return root
+    }
+
+    private fun makeStatusPanel(): Triple<JPanel, JProgressBar, JLabel> {
+        val root = JPanel()
+        root.layout = BorderLayout()
+        root.background = Color(0x303135)
+
+        val label = JLabel()
+        label.text = "Загрузка..."
+        label.foreground = Color(0xddddde)
+        label.horizontalAlignment = SwingConstants.CENTER
+        label.border = BorderFactory.createEmptyBorder(30, 40, 15, 40)
+        val availFontNames = GraphicsEnvironment.getLocalGraphicsEnvironment().availableFontFamilyNames
+        val fontName = listOf("Helvetica", "Arial").find { availFontNames.contains(it) }
+        label.font = Font(fontName, Font.PLAIN, 20)
+        root.add(label, BorderLayout.NORTH)
+
+        val progressBar = GProgressBar()
+        progressBar.border = BorderFactory.createEmptyBorder(0, 40, 30, 40)
+        progressBar.background = Color(0xddddde)
+        progressBar.foreground = Color(0x00db9d)
+        root.add(progressBar, BorderLayout.SOUTH)
+
+        return Triple(root, progressBar, label)
+    }
+
+    private fun prepareWindow() {
+        title = "Загрузка..."
+        isUndecorated = true
+        defaultCloseOperation = WindowConstants.EXIT_ON_CLOSE
+        pack()
+        setLocationRelativeTo(null)
     }
 
     /**
