@@ -8,14 +8,28 @@ os:
 compiler:
   - gcc
 
-before_script:
-  - if [ $TRAVIS_OS_NAME = 'windows' ]; then git clone https://github.com/portapps/portapps ${TRAVIS_BUILD_DIR}/../portapps; fi
-  - if [ $TRAVIS_OS_NAME = 'windows' ]; then source ${TRAVIS_BUILD_DIR}/../portapps/.travis/prepare.sh; fi
-  - if [ $TRAVIS_OS_NAME = 'windows' ]; then bash ${TRAVIS_BUILD_DIR}/../portapps/.travis/java.sh; fi
-  - if [ $TRAVIS_OS_NAME = 'windows' ]; then cmd.exe /C '.\.travis\install-zlib.bat'; fi
-  - bash .travis/prepare.sh
-
-script:
-  - if [ $TRAVIS_OS_NAME = 'linux' ]; then make pkg-linux; fi
-  - if [ $TRAVIS_OS_NAME = 'osx' ]; then make pkg-macos; fi
-  - if [ $TRAVIS_OS_NAME = 'windows' ]; then make pkg-windows; fi
+matrix:
+  include:
+    - os: windows
+      before_script:
+        - git clone https://github.com/portapps/portapps ${TRAVIS_BUILD_DIR}/../portapps
+        - source ${TRAVIS_BUILD_DIR}/../portapps/.travis/prepare.sh
+        - bash ${TRAVIS_BUILD_DIR}/../portapps/.travis/java.sh
+        - cmd.exe /C '.\.travis\install-zlib.bat'
+      install: choco install mingw
+      script:
+        - mingw32-make pkg-windows
+    - os: linux
+      before_script:
+        - add-apt-repository -y ppa:saiarcot895/myppa
+        - apt update
+        - apt install openjdk-8-jdk zlib1g zlib1g-dev
+      script:
+        - make pkg-linux
+    - os: osx
+      before_script:
+        - brew tap AdoptOpenJDK/openjdk
+        - brew cask install adoptopenjdk8
+        - brew install zlib
+      script:
+        - make pkg-macos
