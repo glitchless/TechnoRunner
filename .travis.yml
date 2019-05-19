@@ -12,8 +12,8 @@ before_script:
   - if [ $TRAVIS_OS_NAME = 'windows' ]; then git clone https://github.com/portapps/portapps ${TRAVIS_BUILD_DIR}/../portapps; fi
   - if [ $TRAVIS_OS_NAME = 'windows' ]; then source ${TRAVIS_BUILD_DIR}/../portapps/.travis/prepare.sh; fi
   - if [ $TRAVIS_OS_NAME = 'windows' ]; then bash ${TRAVIS_BUILD_DIR}/../portapps/.travis/java.sh; fi
-  - bash .travis/install_jdk.sh
-  - make get-deps
+  - if [ $TRAVIS_OS_NAME = 'windows' ]; then .travis/install-zlib.bat fi
+  - bash .travis/prepare.sh
 
 script:
   - if [ $TRAVIS_OS_NAME = 'linux' ]; then make pkg-linux; fi
