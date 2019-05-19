@@ -12,7 +12,7 @@ before_script:
   - if [ $TRAVIS_OS_NAME = 'windows' ]; then git clone https://github.com/portapps/portapps ${TRAVIS_BUILD_DIR}/../portapps; fi
   - if [ $TRAVIS_OS_NAME = 'windows' ]; then source ${TRAVIS_BUILD_DIR}/../portapps/.travis/prepare.sh; fi
   - if [ $TRAVIS_OS_NAME = 'windows' ]; then bash ${TRAVIS_BUILD_DIR}/../portapps/.travis/java.sh; fi
-  - if [ $TRAVIS_OS_NAME = 'windows' ]; then cmd.exe /C '.travis/install-zlib.bat'; fi
+  - if [ $TRAVIS_OS_NAME = 'windows' ]; then cmd.exe /C '.\.travis\install-zlib.bat'; fi
   - bash .travis/prepare.sh
 
 script:
