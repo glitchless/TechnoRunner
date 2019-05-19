@@ -59,15 +59,15 @@ if %ERRORLEVEL% NEQ 0 (echo FAILED. && echo Log can be found at %LOG_FILE%. && e
 mkdir build && cd build
 
 echo|set /p="[4/6] Configuring... "
-cmake .. -G "mingw32-make Makefiles" -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX="%programfiles%\zlib" >>%LOG_FILE% 2>&1
+cmake .. -G "NMake Makefiles" -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX="%programfiles%\zlib" >>%LOG_FILE% 2>&1
 if %ERRORLEVEL% NEQ 0 (echo FAILED. && echo Log can be found at %LOG_FILE%. && exit /B 1) else (echo done.)
 
 echo|set /p="[5/6] Compiling... "
-mingw32-make >>%LOG_FILE% 2>&1
+nmake >>%LOG_FILE% 2>&1
 if %ERRORLEVEL% NEQ 0 (echo FAILED. && echo Log can be found at %LOG_FILE%. && exit /B 1) else (echo done.)
 
 echo|set /p="[6/6] Installing... "
-mingw32-make install >>%LOG_FILE% 2>&1
+nmake install >>%LOG_FILE% 2>&1
 set PATH=%PATH%;%programfiles%\zlib\bin
 if %ERRORLEVEL% NEQ 0 (echo FAILED. && echo Log can be found at %LOG_FILE%. && exit /B 1) else (echo done.)
 
