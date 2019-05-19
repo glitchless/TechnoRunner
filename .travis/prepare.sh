@@ -7,5 +7,5 @@ if [ $TRAVIS_OS_NAME = 'osx' ]; then
 elif [ $TRAVIS_OS_NAME = 'linux' ]; then
     sudo add-apt-repository -y ppa:saiarcot895/myppa
     sudo apt update
-    sudo apt install openjdk-8-jdk zlib
+    sudo apt install openjdk-8-jdk zlib1g zlib1g-dev
 fi
