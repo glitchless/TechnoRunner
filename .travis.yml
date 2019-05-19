@@ -17,7 +17,8 @@ matrix:
         - bash ${TRAVIS_BUILD_DIR}/../portapps/.travis/java.sh
         - export CC=gcc
         - export CXX=g++
-        - cmd.exe /C '.\.travis\install-zlib.bat' || cat install.log
+        - wget https://downloads.sourceforge.net/project/gnuwin32/zlib/1.2.3/zlib-1.2.3.exe
+        - cmd.exe /C 'zlib-1.2.3.exe /SP /SILENT'
       install: choco install jom
       script:
         - mingw32-make pkg-windows
