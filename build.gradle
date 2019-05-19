@@ -15,7 +15,7 @@ repositories {
 }
 
 dependencies {
-    implementation 'com.github.LionZXY:oslib:master-SNAPSHOT'
+    implementation 'com.github.LionZXY:oslib:5583f0c007'
     implementation "org.rauschig:jarchivelib:1.0.0"
     implementation "fr.litarvan:openlauncherlib:3.0.4"
     implementation 'com.github.LionZXY:mclauncher-api:cf44fb59f4'
@@ -28,7 +28,7 @@ task fatJar(type: Jar) {
     manifest {
         attributes 'Implementation-Title': 'rpi-sense-hat-lib',
                 'Implementation-Version': version,
-                'Main-Class': 'MainKt'
+                'Main-Class': 'HasherKt'
     }
     baseName = project.name
     from {
