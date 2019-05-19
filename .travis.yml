@@ -1,0 +1,12 @@
+language: java
+install: true
+os:
+  - linux
+  - osx
+  - windows
+
+jdk:
+  - oraclejdk8
+
+script:
+  - ./gradlew build
