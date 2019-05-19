@@ -16,14 +16,15 @@ matrix:
         - source ${TRAVIS_BUILD_DIR}/../portapps/.travis/prepare.sh
         - bash ${TRAVIS_BUILD_DIR}/../portapps/.travis/java.sh
         - cmd.exe /C '.\.travis\install-zlib.bat'
+        - cat install.log
       install: choco install mingw
       script:
         - mingw32-make pkg-windows
     - os: linux
       before_script:
-        - add-apt-repository -y ppa:saiarcot895/myppa
-        - apt update
-        - apt install openjdk-8-jdk zlib1g zlib1g-dev
+        - sudo add-apt-repository -y ppa:saiarcot895/myppa
+        - sudo apt update
+        - sudo apt install openjdk-8-jdk zlib1g zlib1g-dev
       script:
         - make pkg-linux
     - os: osx
