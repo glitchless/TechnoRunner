@@ -1,12 +1,14 @@
-package ru.lionzxy.tplauncher.downloader.javas
+package ru.glitchless.games.tprunner.download
 
 import com.google.gson.Gson
+import com.google.gson.annotations.SerializedName
 import com.google.gson.reflect.TypeToken
 import nu.redpois0n.oslib.Arch
 import nu.redpois0n.oslib.OperatingSystem
 import org.rauschig.jarchivelib.ArchiveFormat
 import org.rauschig.jarchivelib.ArchiverFactory
 import org.rauschig.jarchivelib.CompressionType
+import ru.glitchless.games.tprunner.utils.DirectoryHelper
 import sk.tomsik68.mclauncher.api.ui.IProgressMonitor
 import sk.tomsik68.mclauncher.util.FileUtils
 import sk.tomsik68.mclauncher.util.HttpUtils
@@ -32,20 +34,34 @@ class JavaDownloader {
         if (javaBinary == null) {
             return null
         }
+
         val jreFile = File(DirectoryHelper.getTemporaryDirectory(), "jre.${javaBinary!!.extension}")
-        monitor.setStatus("Downloading jre...")
+        monitor.setStatus("Загрузка Java...")
         FileUtils.downloadFileWithProgress(javaBinary!!.downloadUrl, jreFile, monitor)
         println("Jre file download: ${jreFile.absoluteFile}")
+        monitor.setProgress(100)
 
-        monitor.setStatus("Unzipping jre...")
-        monitor.setProgress(-1)
-        val archiver = if (javaBinary!!.extension.equals("zip", true)) {
-            ArchiverFactory.createArchiver(ArchiveFormat.ZIP)
-        } else ArchiverFactory.createArchiver(ArchiveFormat.TAR, CompressionType.GZIP)
+        val archiver =
+                if (javaBinary!!.extension.equals("zip", true)) {
+                    ArchiverFactory.createArchiver(ArchiveFormat.ZIP)
+                } else {
+                    ArchiverFactory.createArchiver(ArchiveFormat.TAR, CompressionType.GZIP)
+                }
         archiver.extract(jreFile, DirectoryHelper.getJavaDirectory())
         println("Jre directory: ${DirectoryHelper.getJavaDirectory()}")
         return File(DirectoryHelper.getJavaDirectory(), javaBinary!!.javaRelativePath)
     }
 }
 
-
+data class JavaBinaryModel(
+        @SerializedName("type")
+        val type: String,
+        @SerializedName("arch")
+        val arch: String,
+        @SerializedName("downloadUrl")
+        val downloadUrl: String,
+        @SerializedName("javaRelativePath")
+        var javaRelativePath: String,
+        @SerializedName("extension")
+        var extension: String
+)

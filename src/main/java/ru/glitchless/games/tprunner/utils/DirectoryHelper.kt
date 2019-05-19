@@ -1,3 +1,5 @@
+package ru.glitchless.games.tprunner.utils
+
 import sk.tomsik68.mclauncher.impl.common.Platform
 import java.io.File
 
@@ -28,8 +30,27 @@ object DirectoryHelper {
         getJREPathFile().createWithMkDirs(path)
     }
 
+    fun getJREPath(): String {
+        var javaPath: String? = null
+        if (getJREPathFile().exists()) {
+            javaPath = getJREPathFile().readText()
+        }
+        if (javaPath.isNullOrEmpty() || !File(javaPath).exists()) {
+            javaPath = "java"
+        }
+        return javaPath
+    }
+
     fun getLauncherFile(): File {
         return File(getDefaultDirectory(), "launcher.jar")
+    }
+
+    fun getLauncherOutLogFile(): File {
+        return File(getDefaultDirectory(), "launcherout.log")
+    }
+
+    fun getLauncherErrLogFile(): File {
+        return File(getDefaultDirectory(), "launchererr.log")
     }
 }
 
