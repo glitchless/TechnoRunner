@@ -12,4 +12,4 @@ before_script:
   - bash .travis/install_jdk.sh
 
 script:
-  - java --version
+  - bash ./gradlew fatJar
