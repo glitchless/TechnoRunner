@@ -6,9 +6,7 @@ os:
   - windows
 
 before_script:
-  - if [ "$TRAVIS_OS_NAME" = "windows" ]; then .travis/install_jdk_windows.bat; fi
-  - if [ "$TRAVIS_OS_NAME" = "osx" ]; then .travis/install_jdk_unix.sh;         fi
-  - if [ "$TRAVIS_OS_NAME" = "linux" ]; then .travis/install_jdk_unix.sh;       fi
+  - bash .travis/install_jdk.sh
 
 script:
   - java --version
