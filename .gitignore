@@ -112,3 +112,5 @@ fabric.properties
 *.log
 *.zip
 *.dmg
+
+!gradle/wrapper/gradle-wrapper.jar

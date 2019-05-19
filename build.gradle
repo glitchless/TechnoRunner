@@ -28,7 +28,7 @@ task fatJar(type: Jar) {
     manifest {
         attributes 'Implementation-Title': 'rpi-sense-hat-lib',
                 'Implementation-Version': version,
-                'Main-Class': 'ru.glitchless.games.MainKt'
+                'Main-Class': 'ru.glitchless.games.tprunner.MainKt'
     }
     baseName = project.name
     from {
