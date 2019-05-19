@@ -49,18 +49,14 @@ pkg-linux: runner-linux jre-linux
 	cp build/jre-linux.tar.gz src/pkg/linux/links/jre.tar.gz
 	cp build/jrepath-linux.txt src/pkg/linux/links/jrepath.txt
 	cp build/libs/TechnoRunner-1.0-SNAPSHOT.jar src/pkg/linux/links/runner.jar
-	cd src/pkg
-	gcc linux/pkg.c linux/pkg.s pkg_generic.c ungz.c untar.c util.c -o ../../build/pkg-linux
-	cd ../..
+	cd src/pkg && gcc linux/pkg.c linux/pkg.s pkg_generic.c ungz.c untar.c util.c -o ../../build/pkg-linux
 
 pkg-macos: runner-macos jre-macos
 	mkdir -p src/pkg/macos/links
 	cp build/jre-macos.tar.gz src/pkg/macos/links/jre.tar.gz
 	cp build/jrepath-macos.txt src/pkg/macos/links/jrepath.txt
 	cp build/libs/TechnoRunner-1.0-SNAPSHOT.jar src/pkg/macos/links/runner.jar
-	cd src/pkg
-	gcc macos/pkg.c macos/pkg.s pkg_generic.c ungz.c untar.c util.c -o ../../build/pkg-macos
-	cd ../..
+	cd src/pkg && gcc macos/pkg.c macos/pkg.s pkg_generic.c ungz.c untar.c util.c -o ../../build/pkg-macos
 
 pkg-windows: runner-windows jre-windows
 	echo 'not implemented'
