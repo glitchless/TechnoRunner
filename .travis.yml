@@ -1,12 +1,14 @@
-language: java
+language: shell
 install: true
 os:
   - linux
   - osx
   - windows
 
-jdk:
-  - oraclejdk8
+before_script:
+  - if [ "$TRAVIS_OS_NAME" = "windows" ]; then .travis/install_jdk_windows.bat; fi
+  - if [ "$TRAVIS_OS_NAME" = "osx" ]; then .travis/install_jdk_unix.sh;         fi
+  - if [ "$TRAVIS_OS_NAME" = "linux" ]; then .travis/install_jdk_unix.sh;       fi
 
 script:
-  - ./gradlew build
+  - java --version
