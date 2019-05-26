@@ -1,12 +1,17 @@
 #include "pkg_generic.h"
 
 #include <stdio.h>
+#include <string.h>
 #include <assert.h>
+#include <signal.h>
+#include <unistd.h>
+#include <errno.h>
+#include <sys/stat.h>
 
 #include "util.h"
 #include "paths.h"
 
-int
+static int
 handle_jre(const char *buf, size_t buf_len, const char *dest_path)
 {
     assert(buf && dest_path);
@@ -50,7 +55,7 @@ out:
     return err;
 }
 
-int
+static int
 handle_jrepath(const char *buf, size_t buf_len, const char *dest_path)
 {
     assert(buf && dest_path);
@@ -98,7 +103,7 @@ out:
     return err;
 }
 
-int
+static int
 handle_runner(const char *buf, size_t buf_len, const char *dest_path)
 {
     assert(buf && dest_path);
@@ -146,8 +151,62 @@ out:
     return err;
 }
 
+static int
+run_runner(const char *root_path)
+{
+    assert(root_path);
+
+    int err = 0;
+    char *java_path = NULL;
+    char *runner_path = NULL;
+
+    java_path = join_path(root_path, JRE_DIRNAME, "jre1.8.0_202", "bin", "java", NULL);
+    if (!check_file_exist(java_path))
+    {
+        log_ef("no java at '%s'", java_path);
+        err = 1;
+        goto out;
+    }
+
+    if (chmod(java_path, 0755))
+    {
+        log_ef("can't chmod 755 java '%s'", java_path);
+        err = 2;
+        goto out;
+    }
+
+    runner_path = join_path(root_path, RUNNER_JAR_FILENAME, NULL);
+    if (!check_file_exist(runner_path))
+    {
+        log_ef("no runner jar at '%s'", runner_path);
+        err = 3;
+        goto out;
+    }
+
+    signal(SIGHUP, SIG_IGN);
+
+    log_if("forking to run '%s -jar %s'", java_path, runner_path);
+    pid_t p = fork();
+    if (p < 0)
+    {
+        log_ef("can't fork: %d ('%s')", errno, strerror(errno));
+        err = 4;
+        goto out;
+    }
+
+    if (p == 0)
+    {
+        execl(java_path, "-jar", runner_path, NULL);
+    }
+
+out:
+    free(java_path);
+    free(runner_path);
+    return err;
+}
+
 int
-handle_all(
+pkg_main(
         const char *jre_buf, size_t jre_buf_len,
         const char *jrepath_buf, size_t jrepath_buf_len,
         const char *runner_buf, size_t runner_buf_len,
@@ -173,6 +232,12 @@ handle_all(
     {
         log_ef("runner failed: %d", ierr);
         return 3;
+    }
+
+    if (ierr = run_runner(dest_path))
+    {
+        log_ef("can't run runner: %d", ierr);
+        return 4;
     }
 
     return 0;

@@ -9,19 +9,19 @@
 .data
 
 _pkg_jre:
-.incbin macos/links/jre.tar.gz
+.incbin "macos/links/jre.tar.gz"
 
 _pkg_jre_end:
 .byte 0
 
 _pkg_jrepath:
-.incbin macos/links/jrepath.txt
+.incbin "macos/links/jrepath.txt"
 
 _pkg_jrepath_end:
 .byte 0
 
 _pkg_runner:
-.incbin macos/links/runner.jar
+.incbin "macos/links/runner.jar"
 
 _pkg_runner_end:
 .byte 0

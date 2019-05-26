@@ -13,7 +13,7 @@ main()
 
     char *minecraft_path = join_path(get_home_path(), ".minecraft", "technomine", NULL);
 
-    int err = handle_all(
+    int err = pkg_main(
             pkg_jre,     pkg_jre_end - pkg_jre,
             pkg_jrepath, pkg_jrepath_end - pkg_jrepath,
             pkg_runner,  pkg_runner_end - pkg_runner,
