@@ -8,13 +8,13 @@ dir-build:
 
 # runner
 runner-linux: dir-build
-	./gradlew build
+	./gradlew fatJar
 
 runner-macos: dir-build
-	./gradlew build
+	./gradlew fatJar
 
 runner-windows: dir-build
-	./gradlew.bat build
+	./gradlew.bat fatJar
 
 
 # jre
