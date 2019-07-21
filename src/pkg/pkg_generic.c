@@ -62,6 +62,7 @@ handle_jrepath(const char *buf, size_t buf_len, const char *dest_path)
 
     int err = 0;
     char *jrepath_path = NULL;
+    char *java_path = NULL;
     FILE *f = NULL;
 
     jrepath_path = join_path(dest_path, JREPATH_FILENAME, NULL);
@@ -85,7 +86,8 @@ handle_jrepath(const char *buf, size_t buf_len, const char *dest_path)
         goto out;
     }
 
-    fwrite(buf, 1, buf_len, f);
+    java_path = make_abs_java_path(dest_path, buf, buf_len);
+    fwrite(java_path, 1, strlen(java_path), f);
     if (ferror(f))
     {
         log_ef("can't write file '%s'", jrepath_path);
@@ -98,6 +100,7 @@ out:
         remove(jrepath_path);
 
     free(jrepath_path);
+    free(java_path);
     if (f)
         fclose(f);
     return err;
@@ -152,7 +155,7 @@ out:
 }
 
 static int
-run_runner(const char *root_path)
+run_runner(const char *root_path, const char *jrepath_buf, size_t jrepath_buf_len)
 {
     assert(root_path);
 
@@ -160,7 +163,7 @@ run_runner(const char *root_path)
     char *java_path = NULL;
     char *runner_path = NULL;
 
-    java_path = join_path(root_path, JRE_DIRNAME, "jre1.8.0_202", "bin", "java", NULL);
+    java_path = make_abs_java_path(root_path, jrepath_buf, jrepath_buf_len);
     if (!check_file_exist(java_path))
     {
         log_ef("no java at '%s'", java_path);
@@ -196,7 +199,10 @@ run_runner(const char *root_path)
 
     if (p == 0)
     {
-        execl(java_path, "-jar", runner_path, NULL);
+        char *cmd = NULL;
+        asprintf(&cmd, "'%s' -jar '%s'", java_path, runner_path);
+        system(cmd);
+        free(cmd);
     }
 
 out:
@@ -216,6 +222,8 @@ pkg_main(
 
     int ierr = 0;
 
+    log_if("dest path: '%s'", dest_path);
+
     if (ierr = handle_jre(jre_buf, jre_buf_len, dest_path))
     {
         log_ef("jre failed: %d", ierr);
@@ -234,7 +242,7 @@ pkg_main(
         return 3;
     }
 
-    if (ierr = run_runner(dest_path))
+    if (ierr = run_runner(dest_path, jrepath_buf, jrepath_buf_len))
     {
         log_ef("can't run runner: %d", ierr);
         return 4;

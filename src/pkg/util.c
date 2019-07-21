@@ -17,6 +17,8 @@
 
 #include <zlib.h>
 
+#include "paths.h"
+
 // str =========================================================================
 
 char *
@@ -155,6 +157,31 @@ mkdirp_for_file(const char *file_path)
 }
 
 // fs ^=========================================================================
+
+// java fs =====================================================================
+
+char *
+make_abs_java_path(const char *root_path, const char *buf, size_t buf_len)
+{
+    char *java_path = NULL;
+
+    char *buf_dup = strndup(buf, buf_len);
+    for (size_t i = 0; i < buf_len; ++i)
+    {
+        if (buf_dup[i] == '\n')
+        {
+            buf_dup[i] = '\0';
+            break;
+        }
+    }
+
+    java_path = join_path(root_path, JRE_DIRNAME, buf_dup, NULL);
+
+    free(buf_dup);
+    return java_path;
+}
+
+// java fs ^====================================================================
 
 // tar =========================================================================
 
