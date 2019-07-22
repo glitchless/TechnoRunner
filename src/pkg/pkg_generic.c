@@ -186,6 +186,12 @@ run_runner(const char *root_path, const char *jrepath_buf, size_t jrepath_buf_le
         goto out;
     }
 
+#ifdef _WIN32
+    log_if("running '%s -jar %s'", java_path, runner_path);
+
+    execlp("cmd.exe", "/C", "start", java_path, "-jar", runner_path);
+
+#else
     signal(SIGHUP, SIG_IGN);
 
     log_if("forking to run '%s -jar %s'", java_path, runner_path);
@@ -201,9 +207,12 @@ run_runner(const char *root_path, const char *jrepath_buf, size_t jrepath_buf_le
     {
         char *cmd = NULL;
         asprintf(&cmd, "'%s' -jar '%s'", java_path, runner_path);
+
         system(cmd);
+
         free(cmd);
     }
+#endif
 
 out:
     free(java_path);

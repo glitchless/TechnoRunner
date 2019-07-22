@@ -8,6 +8,7 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <stdio.h>
+#include <stdarg.h>
 
 // log =========================================================================
 
@@ -29,6 +30,17 @@
 
 char *
 repeat_str(const char *str, size_t n);
+
+#ifdef _WIN32
+
+char *strndup(const char *str, size_t len);
+
+int vasprintf(char **strp, const char *fmt, va_list ap);
+
+int asprintf(char **strp, const char *fmt, ...);
+
+#endif
+
 
 // str ^========================================================================
 

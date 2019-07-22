@@ -1,12 +1,14 @@
 #include "util.h"
 
-#include <string.h>
+#include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 #include <assert.h>
-#include <stdarg.h>
+#include <errno.h>
 
 #ifdef _WIN32
     #include <io.h>
+    #include <direct.h>
 #else
     #include <unistd.h>
     #include <sys/stat.h>
@@ -41,9 +43,67 @@ repeat_str(const char *str, size_t n)
     return result;
 }
 
+#ifdef _WIN32
+
+char *strndup(const char *str, size_t len)
+{
+    char *buffer = malloc(len + 1);
+    assert(buffer);
+
+    size_t i;
+    for (i = 0; (i < len) && (str[i] != '\0'); i++)
+        buffer[i] = str[i];
+    buffer[i] = '\0';
+
+    return buffer;
+}
+
+int vasprintf(char **strp, const char *fmt, va_list ap)
+{
+    int len = _vscprintf(fmt, ap);
+    if (len == -1)
+        return -1;
+
+    char *str = malloc(len + 1);
+    assert(str);
+
+    int r = vsprintf_s(str, len + 1, fmt, ap);
+    if (r == -1)
+    {
+        free(str);
+        return -1;
+    }
+
+    *strp = str;
+    return r;
+}
+
+int asprintf(char **strp, const char *fmt, ...)
+{
+    va_list ap;
+    va_start(ap, fmt);
+    int r = vasprintf(strp, fmt, ap);
+    va_end(ap);
+    return r;
+}
+
+#endif
+
 // str ^========================================================================
 
 // fs ==========================================================================
+
+#ifdef _WIN32
+
+#define PATH_SEPARATOR '\\'
+#define PATH_SEPARATOR_STR "\\"
+
+#else
+
+#define PATH_SEPARATOR '/'
+#define PATH_SEPARATOR_STR "/"
+
+#endif
 
 char *
 join_path_(char *nop, ...)
@@ -57,14 +117,23 @@ join_path_(char *nop, ...)
         ++parts_count;
     va_end(ap);
 
-    char *fmt = repeat_str("%s/", parts_count);
-    fmt[strlen(fmt) - 1] = 0;
+    char *fmt = repeat_str("%s" PATH_SEPARATOR_STR, parts_count);
+    fmt[strlen(fmt) - 1] = '\0';
 
     va_start(ap, nop);
     vasprintf(&result, fmt, ap);
     va_end(ap);
 
     free(fmt);
+
+#ifdef _WIN32
+    for (char *p = result; *p; ++p)
+        if (*p == '/')
+            *p = '\\';
+#endif
+
+    if (result[strlen(result) - 1] == PATH_SEPARATOR)
+        result[strlen(result) - 1] = '\0';
 
     return result;
 }
@@ -73,7 +142,8 @@ const char *
 get_home_path()
 {
 #ifdef _WIN32
-
+    const char *from_env = getenv("APPDATA");
+    return from_env;
 #else
     const char *from_env = getenv("HOME");
     if (from_env)
@@ -92,9 +162,9 @@ check_file_exist(const char *path)
         return 0;
 
 #ifdef _WIN32
-    return !_access_s(path, 0);
+    return !_access_s(path, 04);
 #else
-    return !access(path, 0);
+    return !access(path, R_OK);
 #endif
 }
 
@@ -107,22 +177,30 @@ mkdirp(const char *path)
     int err = 0;
     char *path_ = strdup(path);
 
-    if (path_[strlen(path_) - 1] == '/')
+    if (path_[strlen(path_) - 1] == PATH_SEPARATOR)
         path_[strlen(path_) - 1] = 0;
 
     for (char *p = path_ + 1; *p; ++p)
     {
-        if (*p == '/')
+        if (*p == PATH_SEPARATOR)
         {
             *p = 0;
+#ifdef _WIN32
+            err = _mkdir(path_);
+#else
             err = mkdir(path_, 0755);
+#endif
             if (err < 0 && errno != EEXIST)
                 goto err;
-            *p = '/';
+            *p = PATH_SEPARATOR;
         }
     }
 
+#ifdef _WIN32
+    err = _mkdir(path_);
+#else
     err = mkdir(path_, 0755);
+#endif
     if (err < 0 && errno != EEXIST)
         goto err;
 
@@ -145,7 +223,7 @@ mkdirp_for_file(const char *file_path)
     int err = 0;
     char *path = strdup(file_path);
 
-    char *p = strrchr(path, '/');
+    char *p = strrchr(path, PATH_SEPARATOR);
     if (p)
     {
         *p = 0;
@@ -168,7 +246,7 @@ make_abs_java_path(const char *root_path, const char *buf, size_t buf_len)
     char *buf_dup = strndup(buf, buf_len);
     for (size_t i = 0; i < buf_len; ++i)
     {
-        if (buf_dup[i] == '\n')
+        if (buf_dup[i] == '\r' || buf_dup[i] == '\n')
         {
             buf_dup[i] = '\0';
             break;
@@ -374,7 +452,7 @@ ok:
 
 // gz ==========================================================================
 
-#define UNGZ_CHUNK 16384
+#define UNGZ_CHUNK (4 * 1024 * 1024)
 
 int
 ungz(const char *src, size_t src_len, char **dst, size_t *dst_len)

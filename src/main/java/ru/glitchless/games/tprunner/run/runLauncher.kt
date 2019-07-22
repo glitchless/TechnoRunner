@@ -4,7 +4,7 @@ import nu.redpois0n.oslib.OperatingSystem
 import ru.glitchless.games.tprunner.utils.DirectoryHelper
 
 fun runLauncher() {
-    val processBuilder = ProcessBuilder(getDetachCommand() + getRunCommand())
+    val processBuilder = ProcessBuilder(getCommand())
     println("Execute command: ${processBuilder.command()}")
     processBuilder.directory(DirectoryHelper.getDefaultDirectory())
     processBuilder.redirectError(DirectoryHelper.getLauncherErrLogFile())
@@ -15,6 +15,13 @@ fun runLauncher() {
 
 fun detachLauncherAndDie() {
     System.exit(0)
+}
+
+private fun getCommand(): List<String> {
+    if (OperatingSystem.getOperatingSystem().isUnix)
+        return listOf("nohup") + getRunCommand()
+    else
+        return listOf("cmd.exe", "/C") + getRunCommand()
 }
 
 private fun getDetachCommand(): List<String> {
