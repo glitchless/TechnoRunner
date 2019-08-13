@@ -20,21 +20,21 @@ matrix:
         - wget https://downloads.sourceforge.net/project/gnuwin32/zlib/1.2.3/zlib-1.2.3.exe
         - cmd.exe /C 'zlib-1.2.3.exe /SP /SILENT'
       script:
-        - mingw32-make windows.Makefile
+        - mingw32-make -f windows.Makefile
     - os: linux
       before_script:
         - sudo add-apt-repository -y ppa:saiarcot895/myppa
         - sudo apt update
         - sudo apt install openjdk-8-jdk zlib1g zlib1g-dev
       script:
-        - make linux.Makefile
+        - make -f linux.Makefile
     - os: osx
       before_script:
         - brew tap AdoptOpenJDK/openjdk
         - brew cask install adoptopenjdk8
         - brew install zlib
       script:
-        - make macos.Makefile
+        - make -f macos.Makefile
 
 notifications:
   email: false
