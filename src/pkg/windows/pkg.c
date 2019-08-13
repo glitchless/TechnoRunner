@@ -4,7 +4,7 @@
 #include "pkg_generic.h"
 #include "util.h"
 
-#include "linux/pkg.s.h"
+#include "windows/pkg.s.h"
 
 int
 main()
