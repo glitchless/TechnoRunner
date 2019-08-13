@@ -21,6 +21,11 @@ matrix:
         - cmd.exe /C 'zlib-1.2.3.exe /SP /SILENT'
       script:
         - mingw32-make -f windows.Makefile
+      deploy:
+        provider: releases
+        api_key: $GH_TOKEN
+        file: build\pkg-windows.exe
+        skip_cleanup: true
     - os: linux
       before_script:
         - sudo add-apt-repository -y ppa:saiarcot895/myppa
@@ -28,6 +33,11 @@ matrix:
         - sudo apt install openjdk-8-jdk zlib1g zlib1g-dev
       script:
         - make -f linux.Makefile
+      deploy:
+        provider: releases
+        api_key: $GH_TOKEN
+        file: build/pkg-linux
+        skip_cleanup: true
     - os: osx
       before_script:
         - brew tap AdoptOpenJDK/openjdk
