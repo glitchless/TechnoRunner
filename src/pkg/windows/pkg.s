@@ -9,19 +9,19 @@
 .data
 
 __pkg_jre:
-.incbin "windows\\links\\jre.tar.gz"
+.incbin "windows/links/jre.tar.gz"
 
 __pkg_jre_end:
 .byte 0
 
 __pkg_jrepath:
-.incbin "windows\\links\\jrepath.txt"
+.incbin "windows/links/jrepath.txt"
 
 __pkg_jrepath_end:
 .byte 0
 
 __pkg_runner:
-.incbin "windows\\links\\runner.jar"
+.incbin "windows/links/runner.jar"
 
 __pkg_runner_end:
 .byte 0
