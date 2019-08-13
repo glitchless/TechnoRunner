@@ -35,6 +35,12 @@ matrix:
         - brew install zlib
       script:
         - make macos.Makefile
+        - cp scripts && cp ../build/Minecraft.app ./ && macos_pkg_dmg.sh && cd .. && cp scripts/*.dmg ./Minecraft.dmg
+      deploy:
+        provider: releases
+        api_key: $GH_TOKEN
+        file: Minecraft.dmg
+        skip_cleanup: true
 
 notifications:
   email: false
