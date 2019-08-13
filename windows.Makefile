@@ -10,7 +10,6 @@ src\pkg\windows\links\runner.jar: build\libs\TechnoRunner-1.0-SNAPSHOT.jar
 
 src\pkg\windows\links\jre.tar.gz:
 	mkdir -p src\pkg\windows\links
-	# не работает, но если команду руками запустить в cmd, то она отработает
 	curl https://minecraft.glitchless.ru/jres/jre-8u202-windows-x64.tar.gz --output src\pkg\windows\links\jre.tar.gz
 
 src\pkg\windows\links\jrepath.txt:
