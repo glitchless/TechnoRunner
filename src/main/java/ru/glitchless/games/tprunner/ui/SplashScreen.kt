@@ -45,12 +45,12 @@ class SplashScreen : JFrame(), IProgressMonitor {
         })
         closeBtnPanel.add(closeBtn)
 
-        val backgroundImage = ImageIO.read(javaClass.getResource("/background.jpg"))
+        val backgroundImage = ImageIO.read(javaClass.getResource("/background.jpeg"))
         val backgroundIcon = ImageIcon(backgroundImage)
         val background = JLabel(backgroundIcon)
         root.add(background)
 
-        closeBtn.setLocation(backgroundImage.width - closeBtnImage.width - 25, 25)
+        closeBtn.setLocation(backgroundImage.width - closeBtnImage.width - 13, 13)
 
         return root
     }
@@ -64,14 +64,14 @@ class SplashScreen : JFrame(), IProgressMonitor {
         label.text = "Загрузка..."
         label.foreground = Color(0xddddde)
         label.horizontalAlignment = SwingConstants.CENTER
-        label.border = BorderFactory.createEmptyBorder(30, 40, 15, 40)
+        label.border = BorderFactory.createEmptyBorder(15, 20, 8, 20)
         val availFontNames = GraphicsEnvironment.getLocalGraphicsEnvironment().availableFontFamilyNames
         val fontName = listOf("Helvetica", "Arial").find { availFontNames.contains(it) }
-        label.font = Font(fontName, Font.PLAIN, 20)
+        label.font = Font(fontName, Font.PLAIN, 14)
         root.add(label, BorderLayout.NORTH)
 
         val progressBar = GProgressBar()
-        progressBar.border = BorderFactory.createEmptyBorder(0, 40, 30, 40)
+        progressBar.border = BorderFactory.createEmptyBorder(0, 20, 15, 20)
         progressBar.background = Color(0xddddde)
         progressBar.foreground = Color(0x00db9d)
         root.add(progressBar, BorderLayout.SOUTH)
