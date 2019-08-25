@@ -17,7 +17,7 @@ src/pkg/macos/links/jre.tar.gz:
 
 src/pkg/macos/links/jrepath.txt:
 	mkdir -p src/pkg/macos/links
-	echo 'jre1.8.0_202.jre/Contents/Home/bin/java' > src/pkg/macos/links/jrepath.txt
+	echo 'jre_1.8_mac_x64/Contents/Home/bin/java' > src/pkg/macos/links/jrepath.txt
 
 .PHONY: build
 build: src/pkg/macos/links/runner.jar src/pkg/macos/links/jre.tar.gz src/pkg/macos/links/jrepath.txt
