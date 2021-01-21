@@ -2,22 +2,29 @@
   {
     "type": "Linux",
     "arch": "x86_64",
-    "extension": "zip",
-    "downloadUrl": "http://download.glitchless.ru/jres/jre_1.8_linux_x64.zip",
-    "javaRelativePath": "jre_1.8_linux_x64/bin/java"
+    "extension": "tar.gz",
+    "downloadUrl": "https://download.bell-sw.com/java/8u282+8/bellsoft-jre8u282+8-linux-amd64-full.tar.gz",
+    "javaRelativePath": "jre8u282-full/bin/java"
   },
   {
     "type": "Windows",
     "arch": "x86_64",
     "extension": "zip",
-    "downloadUrl": "http://download.glitchless.ru/jres/jre_1.8_windows_x64.zip",
-    "javaRelativePath": "jre_1.8_windows_x64/bin/java.exe"
+    "downloadUrl": "https://download.bell-sw.com/java/8u282+8/bellsoft-jre8u282+8-windows-amd64-full.zip",
+    "javaRelativePath": "jre8u282-full/bin/java.exe"
   },
   {
     "type": "macOS",
     "arch": "x86_64",
     "extension": "zip",
-    "downloadUrl": "http://download.glitchless.ru/jres/jre_1.8_mac_x64.zip",
-    "javaRelativePath": "jre_1.8_mac_x64/bin/java"
+    "downloadUrl": "https://download.bell-sw.com/java/8u282+8/bellsoft-jre8u282+8-macos-amd64-full.zip",
+    "javaRelativePath": "jre8u282-full/bin/java"
+  },
+  {
+    "type": "macOS",
+    "arch": "arm",
+    "extension": "zip",
+    "downloadUrl": "https://download.bell-sw.com/java/8u282+8/bellsoft-jre8u282+8-macos-aarch64-full.zip",
+    "javaRelativePath": "jre8u282-full/bin/java"
   }
 ]
