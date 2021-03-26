@@ -15,8 +15,8 @@ repositories {
 }
 
 dependencies {
-    implementation 'com.github.LionZXY:oslib:5583f0c007'
-    implementation "org.rauschig:jarchivelib:1.0.0"
+    implementation 'com.github.LionZXY:oslib:4a529cbef2'
+    implementation "org.rauschig:jarchivelib:1.1.0"
     implementation "fr.litarvan:openlauncherlib:3.0.4"
     implementation 'com.github.LionZXY:mclauncher-api:cf44fb59f4'
     implementation 'com.google.code.gson:gson:2.8.5'
@@ -26,7 +26,7 @@ dependencies {
 
 task fatJar(type: Jar) {
     manifest {
-        attributes 'Implementation-Title': 'rpi-sense-hat-lib',
+        attributes 'Implementation-Title': 'TechnoRunner',
                 'Implementation-Version': version,
                 'Main-Class': 'ru.glitchless.games.tprunner.MainKt'
     }

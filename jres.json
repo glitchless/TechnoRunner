@@ -25,6 +25,6 @@
     "arch": "arm",
     "extension": "zip",
     "downloadUrl": "https://download.bell-sw.com/java/8u282+8/bellsoft-jre8u282+8-macos-aarch64-full.zip",
-    "javaRelativePath": "jre8u282-full/bin/java"
+    "javaRelativePath": "jre8u282-full.jre/bin/java"
   }
 ]
