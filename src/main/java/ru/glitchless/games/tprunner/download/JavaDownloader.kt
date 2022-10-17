@@ -23,11 +23,13 @@ class JavaDownloader {
     fun initDownloader() {
         val json = HttpUtils.httpGet(JRE_JSON_URL)
         val os = OperatingSystem.getOperatingSystem()
-        javaBinary =
-                gson.fromJson<List<JavaBinaryModel>>(json, object : TypeToken<List<JavaBinaryModel>>() {}.type).find {
-                    OperatingSystem.getOperatingSystem(it.type) == os.type &&
-                            Arch.getArch(it.arch) == os.arch
-                }
+        javaBinary = gson.fromJson<List<JavaBinaryModel>>(
+            json,
+            object : TypeToken<List<JavaBinaryModel>>() {}.type
+        ).find {
+            OperatingSystem.getOperatingSystem(it.type) == os.type &&
+                    Arch.getArch(it.arch) == os.arch
+        }
     }
 
     fun downloadJava(monitor: IProgressMonitor): File? {
@@ -41,12 +43,11 @@ class JavaDownloader {
         println("Jre file download: ${jreFile.absoluteFile}")
         monitor.setProgress(100)
 
-        val archiver =
-                if (javaBinary!!.extension.equals("zip", true)) {
-                    ArchiverFactory.createArchiver(ArchiveFormat.ZIP)
-                } else {
-                    ArchiverFactory.createArchiver(ArchiveFormat.TAR, CompressionType.GZIP)
-                }
+        val archiver = if (javaBinary!!.extension.equals("zip", true)) {
+            ArchiverFactory.createArchiver(ArchiveFormat.ZIP)
+        } else {
+            ArchiverFactory.createArchiver(ArchiveFormat.TAR, CompressionType.GZIP)
+        }
         archiver.extract(jreFile, DirectoryHelper.getJavaDirectory())
         println("Jre directory: ${DirectoryHelper.getJavaDirectory()}")
         return File(DirectoryHelper.getJavaDirectory(), javaBinary!!.javaRelativePath)
@@ -54,14 +55,14 @@ class JavaDownloader {
 }
 
 data class JavaBinaryModel(
-        @SerializedName("type")
-        val type: String,
-        @SerializedName("arch")
-        val arch: String,
-        @SerializedName("downloadUrl")
-        val downloadUrl: String,
-        @SerializedName("javaRelativePath")
-        var javaRelativePath: String,
-        @SerializedName("extension")
-        var extension: String
+    @SerializedName("type")
+    val type: String,
+    @SerializedName("arch")
+    val arch: String,
+    @SerializedName("downloadUrl")
+    val downloadUrl: String,
+    @SerializedName("javaRelativePath")
+    var javaRelativePath: String,
+    @SerializedName("extension")
+    var extension: String
 )
