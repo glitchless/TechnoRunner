@@ -15,7 +15,7 @@ repositories {
 }
 
 dependencies {
-    implementation 'com.github.LionZXY:oslib:feature~detect_rosetta-SNAPSHOT'
+    implementation 'com.github.LionZXY:oslib:d5ba9facde'
     implementation "org.rauschig:jarchivelib:1.1.0"
     implementation "fr.litarvan:openlauncherlib:3.0.4"
     implementation 'com.github.LionZXY:mclauncher-api:cf44fb59f4'
