@@ -45,8 +45,17 @@ compose.desktop {
         mainClass = "ru.lionzxy.techoparkrunner.MainKt"
         nativeDistributions {
             targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
-            packageName = "KMMTechnoparkRunner"
+            packageName = "Minecraft by Glitchless Games"
             packageVersion = "1.0.0"
+            macOS {
+                iconFile.set(project.file("assets/logo_macos.icns"))
+            }
+            windows {
+                iconFile.set(project.file("assets/logo_windows.ico"))
+            }
+            linux {
+                iconFile.set(project.file("assets/logo_linux.png"))
+            }
         }
     }
 }
