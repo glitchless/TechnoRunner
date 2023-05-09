@@ -1,8 +1,10 @@
 package ru.lionzxy.techoparkrunner.downloader
 
-import io.ktor.client.HttpClient
-import io.ktor.client.call.body
-import io.ktor.client.request.get
+import io.ktor.client.*
+import io.ktor.client.call.*
+import io.ktor.client.request.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import nu.redpois0n.oslib.Arch
@@ -10,12 +12,12 @@ import nu.redpois0n.oslib.OperatingSystem
 import okhttp3.internal.format
 import okio.FileSystem
 import okio.Path
+import okio.Path.Companion.toPath
 import ru.lionzxy.techoparkrunner.model.ProgressState
 import ru.lionzxy.techoparkrunner.utils.DirectoryHelper
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
-import okio.Path.Companion.toPath
 import ru.lionzxy.techoparkrunner.utils.download
+import ru.lionzxy.techoparkrunner.utils.unzip.UnTarWithProgress
+import ru.lionzxy.techoparkrunner.utils.unzip.UnzipWithProgress
 
 private const val JRE_JSON_URL = "https://minecraft.glitchless.ru/jres.json"
 
@@ -23,6 +25,7 @@ class JavaDownloader(
     private val client: HttpClient,
     private val onStateUpdate: (ProgressState) -> Unit
 ) {
+    private val unTarWithProgress = UnTarWithProgress()
 
     suspend fun exist(): Boolean = withContext(Dispatchers.IO) {
         val jreFile = DirectoryHelper.getJREPathFile()
@@ -46,7 +49,7 @@ class JavaDownloader(
         println("Detected os is $os")
         val jre = jres.find {
             OperatingSystem.getOperatingSystem(it.type) == os.type &&
-                Arch.getArch(it.arch) == os.arch
+                    Arch.getArch(it.arch) == os.arch
         } ?: error("Can't found jre for ${os.type} and ${os.arch}")
         val jreArchive = downloadJre(jre)
         var unpackedJre = unpackJre(jreArchive, jre)
@@ -70,13 +73,15 @@ class JavaDownloader(
     }
 
     private suspend fun unpackJre(jrePath: Path, jre: JavaBinaryModel): Path {
-        onStateUpdate(ProgressState("Разархивирование Java..."))
-        val archiver = if (jre.extension.equals("zip", true)) {
-            ArchiverFactory.createArchiver(ArchiveFormat.ZIP)
-        } else {
-            ArchiverFactory.createArchiver(ArchiveFormat.TAR, CompressionType.GZIP)
+        onStateUpdate(ProgressState("Распаковка Java..."))
+        val unpackProgressUpdate: (Float) -> Unit = { percent ->
+            onStateUpdate(ProgressState("Распаковка Java... ${format("%.2f", percent * 100)}%", percent))
         }
-        archiver.extract(jrePath.toFile(), DirectoryHelper.getJavaDirectory())
+        if (jre.extension.equals("zip", true)) {
+            UnzipWithProgress.unzipWithProgress(jrePath, DirectoryHelper.getJavaDirectory(), unpackProgressUpdate)
+        } else {
+            unTarWithProgress.unTarWithProgress(jrePath, DirectoryHelper.getJavaDirectory(), unpackProgressUpdate)
+        }
         println("Jre directory: ${DirectoryHelper.getJavaDirectory()}")
         onStateUpdate(ProgressState("Java разархивирована"))
         return DirectoryHelper.getJavaDirectory().resolve(jre.javaRelativePath)

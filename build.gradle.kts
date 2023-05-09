@@ -32,7 +32,8 @@ kotlin {
                 implementation("io.ktor:ktor-serialization-kotlinx-json:${extra["ktor.version"]}")
                 implementation("com.github.LionZXY:oslib:d5ba9facde")
                 implementation("com.squareup.okio:okio:3.3.0")
-                implementation("org.rauschig:jarchivelib:1.1.0")
+                implementation("net.lingala.zip4j:zip4j:2.11.5")
+                implementation("org.apache.commons:commons-compress:1.23.0")
             }
         }
         val jvmTest by getting
