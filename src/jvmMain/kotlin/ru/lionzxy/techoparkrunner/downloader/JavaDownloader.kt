@@ -16,8 +16,7 @@ import okio.Path.Companion.toPath
 import ru.lionzxy.techoparkrunner.model.ProgressState
 import ru.lionzxy.techoparkrunner.utils.DirectoryHelper
 import ru.lionzxy.techoparkrunner.utils.download
-import ru.lionzxy.techoparkrunner.utils.unzip.UnTarWithProgress
-import ru.lionzxy.techoparkrunner.utils.unzip.UnzipWithProgress
+import ru.lionzxy.techoparkrunner.utils.unzip.DecompressWithProgress
 
 private const val JRE_JSON_URL = "https://minecraft.glitchless.ru/jres.json"
 
@@ -25,7 +24,7 @@ class JavaDownloader(
     private val client: HttpClient,
     private val onStateUpdate: (ProgressState) -> Unit
 ) {
-    private val unTarWithProgress = UnTarWithProgress()
+    private val decompressWithProgress = DecompressWithProgress()
 
     suspend fun exist(): Boolean = withContext(Dispatchers.IO) {
         val jreFile = DirectoryHelper.getJREPathFile()
@@ -74,17 +73,18 @@ class JavaDownloader(
 
     private suspend fun unpackJre(jrePath: Path, jre: JavaBinaryModel): Path {
         onStateUpdate(ProgressState("Распаковка Java..."))
-        val unpackProgressUpdate: (Float) -> Unit = { percent ->
+        decompressWithProgress.decompressWithProgress(
+            jrePath,
+            DirectoryHelper.getJavaDirectory()
+        ) { percent ->
             onStateUpdate(ProgressState("Распаковка Java... ${format("%.2f", percent * 100)}%", percent))
-        }
-        if (jre.extension.equals("zip", true)) {
-            UnzipWithProgress.unzipWithProgress(jrePath, DirectoryHelper.getJavaDirectory(), unpackProgressUpdate)
-        } else {
-            unTarWithProgress.unTarWithProgress(jrePath, DirectoryHelper.getJavaDirectory(), unpackProgressUpdate)
         }
         println("Jre directory: ${DirectoryHelper.getJavaDirectory()}")
         onStateUpdate(ProgressState("Java разархивирована"))
-        return DirectoryHelper.getJavaDirectory().resolve(jre.javaRelativePath)
+        val javaPath = DirectoryHelper.getJavaDirectory().resolve(jre.javaRelativePath)
+        javaPath.toFile().setExecutable(true)
+        println("Set executable for $javaPath")
+        return javaPath
     }
 }
 

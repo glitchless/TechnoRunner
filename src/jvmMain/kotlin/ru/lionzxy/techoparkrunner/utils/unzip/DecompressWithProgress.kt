@@ -6,11 +6,13 @@ import okio.Path.Companion.toOkioPath
 import org.apache.commons.compress.archivers.ArchiveEntry
 import org.apache.commons.compress.archivers.ArchiveInputStream
 import org.apache.commons.compress.archivers.tar.TarArchiveInputStream
+import org.apache.commons.compress.archivers.zip.ZipArchiveInputStream
+import org.apache.commons.compress.compressors.gzip.GzipCompressorInputStream
 
-class UnTarWithProgress(
+class DecompressWithProgress(
     private val fs: FileSystem = FileSystem.SYSTEM
 ) {
-    suspend fun unTarWithProgress(
+    suspend fun decompressWithProgress(
         path: Path,
         to: Path,
         onPercentUpdate: (Float) -> Unit
@@ -18,7 +20,15 @@ class UnTarWithProgress(
         println("Untar $path to $to")
         val totalSize = fs.metadataOrNull(path)?.size
         fs.read(path) {
-            TarArchiveInputStream(inputStream()).use { archiveStream ->
+            val stream = if (path.toFile().extension == "zip") {
+                ZipArchiveInputStream(inputStream())
+            } else if (path.toString().endsWith("tar.gz")) {
+                TarArchiveInputStream(GzipCompressorInputStream(inputStream()))
+            } else {
+                error("Unsupported format for $path")
+            }
+
+            stream.use { archiveStream ->
                 unsafeUnarchiveStream(archiveStream, to) { bytesRead ->
                     if (totalSize == null) {
                         return@unsafeUnarchiveStream
@@ -61,6 +71,7 @@ class UnTarWithProgress(
                 } else {
                     fs.createDirectories(parent)
                 }
+
                 fs.write(output) {
                     archiveStream.copyTo(outputStream())
                 }
