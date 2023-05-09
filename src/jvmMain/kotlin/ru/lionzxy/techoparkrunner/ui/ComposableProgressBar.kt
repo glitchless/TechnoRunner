@@ -43,14 +43,30 @@ fun ComposableProgressBar(progressState: ProgressState) {
             fontFamily = fontFamily,
             color = Color(0xFFDDDDDE)
         )
+        ComposableProgressIndicator(progressState.progress)
+    }
+}
+
+@Composable
+private fun ComposableProgressIndicator(progress: Float?) {
+    val progressModifier = Modifier.fillMaxWidth()
+        .padding(horizontal = 22.dp)
+        .height(12.dp)
+        .clip(RoundedCornerShape(2.dp))
+    if (progress == null) {
         LinearProgressIndicator(
-            modifier = Modifier.fillMaxWidth()
-                .padding(horizontal = 22.dp)
-                .height(12.dp)
-                .clip(RoundedCornerShape(2.dp)),
+            modifier = progressModifier,
             strokeCap = StrokeCap.Square,
             backgroundColor = Color(0xFFDDDDDE),
             color = Color(0xFF00DB9D)
+        )
+    } else {
+        LinearProgressIndicator(
+            modifier = progressModifier,
+            strokeCap = StrokeCap.Square,
+            backgroundColor = Color(0xFFDDDDDE),
+            color = Color(0xFF00DB9D),
+            progress = progress
         )
     }
 }

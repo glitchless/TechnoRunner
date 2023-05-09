@@ -10,6 +10,8 @@ private const val UNZIP_REQUEST_TIMEOUT_MS = 100L
 
 object UnzipWithProgress {
     suspend fun unzipWithProgress(path: Path, to: Path, onPercentUpdate: (Float) -> Unit) {
+        println("Unzip $path to $to")
+
         val zipFile = ZipFile(path.toFile())
         zipFile.isRunInThread = true
         zipFile.extractAll(to.toFile().absolutePath)

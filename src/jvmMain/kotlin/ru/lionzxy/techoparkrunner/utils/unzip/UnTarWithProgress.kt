@@ -15,6 +15,7 @@ class UnTarWithProgress(
         to: Path,
         onPercentUpdate: (Float) -> Unit
     ) {
+        println("Untar $path to $to")
         val totalSize = fs.metadataOrNull(path)?.size
         fs.read(path) {
             TarArchiveInputStream(inputStream()).use { archiveStream ->
