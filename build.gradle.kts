@@ -48,9 +48,12 @@ compose.desktop {
             packageName = "Minecraft by Glitchless Games"
             packageVersion = "1.0.0"
             macOS {
+                bundleID = "ru.lionzxy.techoparkrunner"
+                dockName = "GlitchlessGames"
                 iconFile.set(project.file("assets/logo_macos.icns"))
             }
             windows {
+                dirChooser = true
                 iconFile.set(project.file("assets/logo_windows.ico"))
             }
             linux {
