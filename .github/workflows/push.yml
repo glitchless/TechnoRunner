@@ -16,4 +16,9 @@ jobs:
           distribution: 'adopt'
           java-version: '11'
       - name: Build the project
-        run: ./gradlew assemble
+        run: ./gradlew package
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: artifacts-${{ matrix.os }}
+          path: build/compose/binaries
