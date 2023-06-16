@@ -4,10 +4,7 @@ on: [ push ]
 
 jobs:
   build:
-    strategy:
-      matrix:
-        os: [ macos-latest, ubuntu-latest, windows-latest ]
-    runs-on: ${{ matrix.os }}
+    runs-on: windows-latest
     steps:
       - uses: actions/checkout@v1
       - name: Setup Java JDK
@@ -18,9 +15,9 @@ jobs:
       - name: Setup Gradle
         uses: gradle/gradle-build-action@v2
       - name: Build the project
-        run: ./gradlew packageDistributionForCurrentOS
+        run: ./gradlew packageMsi
       - name: Upload Artifacts
         uses: actions/upload-artifact@v3
         with:
-          name: artifacts-${{ matrix.os }}
+          name: artifacts
           path: build/compose/binaries
