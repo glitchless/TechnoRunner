@@ -10,6 +10,7 @@ namespace tprunner {
 
 struct JavaBinaryModel {
     QString type, arch, downloadUrl, javaRelativePath, extension;
+    QString sha256;   // Base64 SHA-256 of the archive ("SHA-256" key); empty if absent
     static JavaBinaryModel fromJsonObject(const QJsonObject& o);
     static QList<JavaBinaryModel> listFromJson(const QByteArray& json);
 };

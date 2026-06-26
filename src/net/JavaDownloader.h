@@ -20,6 +20,9 @@ public:
     QString download(ProgressMonitor* monitor);   // extracts to jre/<code>, returns java path or "" if no match
     static std::optional<JavaBinaryModel> findMatch(const QList<JavaBinaryModel>& list,
                                                     Os os, CpuArch arch);
+    // Throws std::runtime_error if the file's Base64 SHA-256 != expected. No-op when
+    // expected is empty (manifest without a hash).
+    static void checkArchiveHash(const QString& path, const QString& expectedSha256Base64);
 private:
     Downloader* dl_;
     QString code_;

@@ -43,7 +43,7 @@ private slots:
             "\"SHA-256\":\"Nw1NQPLhV1V7Xg06b+XK0yry2M6x0zyxFIOHxvPM0uM=\","
             "\"jre\":{\"code\":\"jre8_202\",\"files\":["
             "{\"type\":\"Linux\",\"arch\":\"x86\",\"extension\":\"tar.gz\",\"downloadUrl\":\"https://x/li586.tar.gz\",\"javaRelativePath\":\"jre1.8.0_202/bin/java\"},"
-            "{\"type\":\"Linux\",\"arch\":\"x86_64\",\"extension\":\"tar.gz\",\"downloadUrl\":\"https://x/lx64.tar.gz\",\"javaRelativePath\":\"jre1.8.0_202/bin/java\"},"
+            "{\"type\":\"Linux\",\"arch\":\"x86_64\",\"extension\":\"tar.gz\",\"downloadUrl\":\"https://x/lx64.tar.gz\",\"javaRelativePath\":\"jre1.8.0_202/bin/java\",\"SHA-256\":\"bSQf1wzJSvZnozyE7F+H0CthgVsIHSVcqPhaG233LUw=\"},"
             "{\"type\":\"Windows\",\"arch\":\"x86_64\",\"extension\":\"tar.gz\",\"downloadUrl\":\"https://x/wx64.tar.gz\",\"javaRelativePath\":\"jre1.8.0_202/bin/java.exe\"},"
             "{\"type\":\"macOS\",\"arch\":\"x86_64\",\"extension\":\"tar.gz\",\"downloadUrl\":\"https://x/mx64.tar.gz\",\"javaRelativePath\":\"jre1.8.0_202.jre/Contents/Home/bin/java\"}"
             "]}}";
@@ -55,6 +55,9 @@ private slots:
         QCOMPARE(m->jreFiles[1].type, QStringLiteral("Linux"));
         QCOMPARE(m->jreFiles[1].arch, QStringLiteral("x86_64"));
         QCOMPARE(m->jreFiles[1].extension, QStringLiteral("tar.gz"));
+        QCOMPARE(m->jreFiles[1].sha256,
+                 QStringLiteral("bSQf1wzJSvZnozyE7F+H0CthgVsIHSVcqPhaG233LUw="));
+        QCOMPARE(m->jreFiles[0].sha256, QString()); // absent → empty
         QCOMPARE(m->jreFiles[3].javaRelativePath,
                  QStringLiteral("jre1.8.0_202.jre/Contents/Home/bin/java"));
     }

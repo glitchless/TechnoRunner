@@ -322,3 +322,15 @@ Contract changes:
   replaces the old `init()` that fetched `jres.json`. Flow order is now: fetch manifest →
   (if needed) download JRE → check/replace launcher jar.
 - `needJre` is still decided by `jrepath.txt` (missing/empty/dangling), unchanged.
+
+### JRE integrity validation
+
+Each `jre.files[]` entry may carry a Base64 `SHA-256` of its archive (same scheme as the
+launcher jar). The runner validates the JRE in two places (both throw → `tryExponential`
+retries):
+1. **After download, before extraction:** `JavaDownloader::checkArchiveHash` compares the
+   downloaded archive's Base64 SHA-256 to the manifest value. Empty/absent hash → skipped
+   (backward compatible).
+2. **After extraction:** `JavaDownloader::download` asserts the `javaRelativePath` binary
+   actually exists, so a wrong path or partial archive fails loudly instead of silently
+   falling back to system `java`.
