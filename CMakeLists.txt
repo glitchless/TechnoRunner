@@ -17,7 +17,7 @@ add_library(tprunner_lib STATIC)
 target_include_directories(tprunner_lib PUBLIC ${CMAKE_SOURCE_DIR}/src)
 target_link_libraries(tprunner_lib PUBLIC Qt6::Widgets Qt6::Network LibArchive::LibArchive)
 
-qt_add_executable(TechnoRunner src/main.cpp)
+qt_add_executable(TechnoRunner src/main.cpp resources/resources.qrc)
 target_link_libraries(TechnoRunner PRIVATE tprunner_lib)
 set_target_properties(TechnoRunner PROPERTIES WIN32_EXECUTABLE ON MACOSX_BUNDLE ON)
 
@@ -64,3 +64,8 @@ tprunner_add_test(BootstrapperTest tests/BootstrapperTest.cpp)
 
 target_sources(tprunner_lib PRIVATE src/ui/GProgressBar.cpp)
 tprunner_add_test(GProgressBarTest tests/GProgressBarTest.cpp)
+
+target_sources(tprunner_lib PRIVATE src/ui/SplashScreen.cpp)
+# .qrc is attached to the executable and the test (NOT the static lib) so the
+# resource initializer is not dropped by the linker.
+tprunner_add_test(SplashScreenTest tests/SplashScreenTest.cpp resources/resources.qrc)
