@@ -29,7 +29,10 @@ void extractTo(const QString& archivePath, const QString& destDir) {
     struct archive* ext = archive_write_disk_new();
     archive_write_disk_set_options(ext,
         ARCHIVE_EXTRACT_TIME | ARCHIVE_EXTRACT_PERM |
-        ARCHIVE_EXTRACT_ACL  | ARCHIVE_EXTRACT_FFLAGS);
+        ARCHIVE_EXTRACT_ACL  | ARCHIVE_EXTRACT_FFLAGS |
+        // Refuse ".." path components and writes through symlinks: the archive is
+        // fetched over the network, so a malicious/MITM'd JRE must not escape destDir.
+        ARCHIVE_EXTRACT_SECURE_NODOTDOT | ARCHIVE_EXTRACT_SECURE_SYMLINKS);
     archive_write_disk_set_standard_lookup(ext);
 
     const QByteArray src = archivePath.toUtf8();

@@ -1,6 +1,8 @@
 #include <QtTest>
 #include <QTemporaryDir>
 #include <QFile>
+#include <QDir>
+#include <QFileInfo>
 #include "util/Archive.h"
 
 using namespace tprunner;
@@ -32,6 +34,13 @@ private slots:
     void missingArchiveThrows() {
         QTemporaryDir dir;
         QVERIFY_EXCEPTION_THROWN(Archive::extractZip("/no/such.zip", dir.path()), std::runtime_error);
+    }
+    void rejectsPathTraversal() { // Zip Slip: an entry named "../escaped.txt" must not escape destDir
+        QTemporaryDir dir;
+        const QString dest = dir.path() + "/out";
+        QDir().mkpath(dest);
+        QVERIFY_EXCEPTION_THROWN(Archive::extractZip(fixture("evil.zip"), dest), std::runtime_error);
+        QVERIFY(!QFileInfo::exists(dir.path() + "/escaped.txt"));
     }
 };
 
