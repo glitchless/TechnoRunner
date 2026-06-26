@@ -48,18 +48,18 @@ private slots:
     void hashCheckPassesOnMatch() {
         QTemporaryFile f; QVERIFY(f.open()); f.write("abc"); f.close();
         // SHA-256("abc") Base64 — must not throw
-        JavaDownloader::checkArchiveHash(f.fileName(),
+        JavaDownloader::checkFileHash(f.fileName(),
             QStringLiteral("ungWv48Bz+pBQUDeXa4iI7ADYaOWF3qctBD/YfIAFa0="));
     }
     void hashCheckThrowsOnMismatch() {
         QTemporaryFile f; QVERIFY(f.open()); f.write("abc"); f.close();
         QVERIFY_EXCEPTION_THROWN(
-            JavaDownloader::checkArchiveHash(f.fileName(), QStringLiteral("wronghash=")),
+            JavaDownloader::checkFileHash(f.fileName(), QStringLiteral("wronghash=")),
             std::runtime_error);
     }
     void hashCheckSkippedWhenEmpty() {
         QTemporaryFile f; QVERIFY(f.open()); f.write("abc"); f.close();
-        JavaDownloader::checkArchiveHash(f.fileName(), QString()); // no-op, no throw
+        JavaDownloader::checkFileHash(f.fileName(), QString()); // no-op, no throw
     }
 };
 

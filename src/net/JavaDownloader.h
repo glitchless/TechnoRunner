@@ -21,8 +21,9 @@ public:
     static std::optional<JavaBinaryModel> findMatch(const QList<JavaBinaryModel>& list,
                                                     Os os, CpuArch arch);
     // Throws std::runtime_error if the file's Base64 SHA-256 != expected. No-op when
-    // expected is empty (manifest without a hash).
-    static void checkArchiveHash(const QString& path, const QString& expectedSha256Base64);
+    // expected is empty (manifest without a hash). Used for both the downloaded archive
+    // and the extracted java binary.
+    static void checkFileHash(const QString& path, const QString& expectedSha256Base64);
 private:
     Downloader* dl_;
     QString code_;

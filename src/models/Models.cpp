@@ -13,6 +13,7 @@ JavaBinaryModel JavaBinaryModel::fromJsonObject(const QJsonObject& o) {
     m.javaRelativePath = o.value("javaRelativePath").toString();
     m.extension        = o.value("extension").toString();
     m.sha256           = o.value("SHA-256").toString();
+    m.javaSha256       = o.value("javaSHA-256").toString();
     return m;
 }
 
