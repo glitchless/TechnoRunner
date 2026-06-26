@@ -43,6 +43,13 @@ endfunction()
 
 tprunner_add_test(SmokeTest tests/SmokeTest.cpp)
 
+# ---- Optional dev utility (HasherMain port) ----
+option(TPRUNNER_BUILD_HASHER "Build the SHA-256 hasher utility" OFF)
+if(TPRUNNER_BUILD_HASHER)
+    qt_add_executable(technorunner-hasher src/tools/hasher_main.cpp)
+    target_link_libraries(technorunner-hasher PRIVATE tprunner_lib)
+endif()
+
 target_sources(tprunner_lib PRIVATE src/util/Hash.cpp)
 tprunner_add_test(HashTest tests/HashTest.cpp)
 
