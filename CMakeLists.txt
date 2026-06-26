@@ -36,3 +36,6 @@ tprunner_add_test(HashTest tests/HashTest.cpp)
 
 target_sources(tprunner_lib PRIVATE src/util/Platform.cpp)
 tprunner_add_test(PlatformTest tests/PlatformTest.cpp)
+
+target_sources(tprunner_lib PRIVATE src/util/Paths.cpp)
+tprunner_add_test(PathsTest tests/PathsTest.cpp)
