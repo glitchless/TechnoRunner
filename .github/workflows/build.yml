@@ -96,7 +96,17 @@ jobs:
         if: runner.os == 'Windows'
         shell: bash
         run: |
-          mkdir dist && cp build/Release/TechnoRunner.exe dist/ 2>/dev/null || cp build/TechnoRunner.exe dist/
+          mkdir dist
+          # The VS generator outputs to build/Release/, where VCPKG_APPLOCAL_DEPS has
+          # already copied libarchive (archive.dll) and its dependency DLLs (z, bz2,
+          # liblzma, lz4, zstd, libcrypto) next to the exe. Ship the exe plus those
+          # DLLs; windeployqt then adds the Qt runtime.
+          if [ -d build/Release ]; then
+            cp build/Release/TechnoRunner.exe build/Release/*.dll dist/
+          else
+            cp build/TechnoRunner.exe dist/
+            cp build/vcpkg_installed/x64-windows/bin/*.dll dist/
+          fi
           windeployqt dist/TechnoRunner.exe
           7z a TechnoRunner-${{ matrix.name }}.zip ./dist/*
 
