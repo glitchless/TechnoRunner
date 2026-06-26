@@ -1,0 +1,102 @@
+name: build
+on:
+  push:
+    branches: [ master, qt-rewrite ]
+    tags: [ 'v*' ]
+  pull_request:
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { os: ubuntu-latest,  name: linux-x86_64,  arch: x86_64 }
+          - { os: windows-latest, name: windows-x86_64, arch: x86_64 }
+          - { os: macos-13,       name: macos-x86_64,   arch: x86_64 }
+          - { os: macos-14,       name: macos-arm64,    arch: arm64 }
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Qt
+        uses: jurplel/install-qt-action@v4
+        with:
+          version: '6.8.*'
+          cache: true
+
+      - name: Install libarchive (Linux)
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y libarchive-dev libfuse2
+
+      - name: Install libarchive (macOS)
+        if: runner.os == 'macOS'
+        run: brew install libarchive
+
+      - name: Install libarchive (Windows)
+        if: runner.os == 'Windows'
+        run: vcpkg install libarchive:x64-windows
+
+      - name: Configure
+        shell: bash
+        run: |
+          if [ "${{ runner.os }}" = "Windows" ]; then
+            cmake -B build -S . -DCMAKE_TOOLCHAIN_FILE="$VCPKG_INSTALLATION_ROOT/scripts/buildsystems/vcpkg.cmake"
+          elif [ "${{ runner.os }}" = "macOS" ]; then
+            cmake -B build -S . -DCMAKE_PREFIX_PATH="$(brew --prefix libarchive)"
+          else
+            cmake -B build -S .
+          fi
+
+      - name: Build
+        run: cmake --build build --config Release
+
+      - name: Test
+        run: ctest --test-dir build --output-on-failure
+        env:
+          QT_QPA_PLATFORM: offscreen
+
+      - name: Package (Linux AppImage)
+        if: runner.os == 'Linux'
+        run: |
+          curl -fsSLO https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-x86_64.AppImage
+          curl -fsSLO https://github.com/linuxdeploy/linuxdeploy-plugin-qt/releases/download/continuous/linuxdeploy-plugin-qt-x86_64.AppImage
+          chmod +x linuxdeploy*.AppImage
+          mkdir -p AppDir/usr/bin && cp build/TechnoRunner AppDir/usr/bin/
+          mkdir -p AppDir/usr/share/applications AppDir/usr/share/icons/hicolor/256x256/apps
+          printf '[Desktop Entry]\nType=Application\nName=TechnoRunner\nExec=TechnoRunner\nIcon=technorunner\nCategories=Game;\n' > AppDir/usr/share/applications/technorunner.desktop
+          cp resources/background.jpeg AppDir/usr/share/icons/hicolor/256x256/apps/technorunner.png || true
+          ./linuxdeploy-x86_64.AppImage --appdir AppDir --plugin qt --output appimage
+          mv TechnoRunner*.AppImage TechnoRunner-${{ matrix.name }}.AppImage
+
+      - name: Package (macOS dmg)
+        if: runner.os == 'macOS'
+        run: |
+          macdeployqt build/glitchless-minecraft.app -dmg
+          mv build/glitchless-minecraft.dmg TechnoRunner-${{ matrix.name }}.dmg
+
+      - name: Package (Windows zip)
+        if: runner.os == 'Windows'
+        shell: bash
+        run: |
+          mkdir dist && cp build/Release/TechnoRunner.exe dist/ 2>/dev/null || cp build/TechnoRunner.exe dist/
+          windeployqt dist/TechnoRunner.exe
+          7z a TechnoRunner-${{ matrix.name }}.zip ./dist/*
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: TechnoRunner-${{ matrix.name }}
+          path: |
+            TechnoRunner-*.AppImage
+            TechnoRunner-*.dmg
+            TechnoRunner-*.zip
+
+      - name: Release on tag
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            TechnoRunner-*.AppImage
+            TechnoRunner-*.dmg
+            TechnoRunner-*.zip
