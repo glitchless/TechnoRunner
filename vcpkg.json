@@ -1,0 +1,5 @@
+{
+  "name": "technorunner",
+  "version-string": "1.0.0",
+  "dependencies": [ "libarchive" ]
+}

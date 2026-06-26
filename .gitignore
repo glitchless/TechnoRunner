@@ -1,4 +1,9 @@
 # Created by .ignore support plugin (hsz.mobi)
+
+# Qt/CMake build output
+/build/
+/vcpkg_installed/
+
 ### Linux template
 *~
 
