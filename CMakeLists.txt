@@ -46,3 +46,6 @@ tprunner_add_test(ModelsTest tests/ModelsTest.cpp)
 target_sources(tprunner_lib PRIVATE src/util/Archive.cpp)
 tprunner_add_test(ArchiveTest tests/ArchiveTest.cpp)
 target_compile_definitions(ArchiveTest PRIVATE SRCDIR="${CMAKE_CURRENT_SOURCE_DIR}/tests")
+
+target_sources(tprunner_lib PRIVATE src/net/Downloader.cpp)
+tprunner_add_test(DownloaderTest tests/DownloaderTest.cpp)
