@@ -21,6 +21,18 @@ qt_add_executable(TechnoRunner src/main.cpp resources/resources.qrc)
 target_link_libraries(TechnoRunner PRIVATE tprunner_lib)
 set_target_properties(TechnoRunner PROPERTIES WIN32_EXECUTABLE ON MACOSX_BUNDLE ON)
 
+if(APPLE)
+    set_target_properties(TechnoRunner PROPERTIES
+        OUTPUT_NAME "glitchless-minecraft"
+        MACOSX_BUNDLE_BUNDLE_NAME "Minecraft"
+        MACOSX_BUNDLE_EXECUTABLE_NAME "glitchless-minecraft"
+        MACOSX_BUNDLE_GUI_IDENTIFIER "ru.glitchless.games"
+        MACOSX_BUNDLE_INFO_PLIST "${CMAKE_SOURCE_DIR}/resources/macos/Info.plist.in")
+    target_sources(TechnoRunner PRIVATE resources/macos/icon.icns)
+    set_source_files_properties(resources/macos/icon.icns PROPERTIES
+        MACOSX_PACKAGE_LOCATION "Resources")
+endif()
+
 # ---- Tests ----
 enable_testing()
 function(tprunner_add_test name)
