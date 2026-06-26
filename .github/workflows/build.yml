@@ -96,8 +96,29 @@ jobs:
       - name: Package (macOS dmg)
         if: runner.os == 'macOS'
         run: |
-          macdeployqt build/Minecraft.app -dmg
-          mv build/Minecraft.dmg TechnoRunner-${{ matrix.name }}.dmg
+          # Deploy Qt frameworks + the keg-only libarchive (and its lz4/lzma/zstd/b2
+          # deps) into the bundle. macdeployqt rewrites their install-names with
+          # install_name_tool, which mutates each Mach-O and invalidates its embedded
+          # ad-hoc code signature. On Apple Silicon the kernel SIGKILLs any process
+          # that maps an invalidly-signed dylib (dyld dies before main() with
+          # "Code Signature Invalid"), so the bundle MUST be re-signed afterwards.
+          macdeployqt build/Minecraft.app
+
+          # Re-sign the whole bundle (ad-hoc) as the very last mutation, so no later
+          # install_name_tool pass can invalidate it again, then hard-verify. The
+          # --strict verify fails the build if anything is still mis-signed, so a
+          # launch-broken artifact can never ship again.
+          codesign --force --deep --sign - build/Minecraft.app
+          codesign --verify --deep --strict --verbose=2 build/Minecraft.app
+
+          # Build the dmg from the verified bundle. We can't use `macdeployqt -dmg`:
+          # it packages the app before our re-sign step can run. Stage an /Applications
+          # symlink so the dmg offers the usual drag-to-install layout.
+          staging="$(mktemp -d)"
+          ditto build/Minecraft.app "$staging/Minecraft.app"
+          ln -s /Applications "$staging/Applications"
+          hdiutil create -volname Minecraft -srcfolder "$staging" \
+            -ov -format UDZO TechnoRunner-${{ matrix.name }}.dmg
 
       - name: Package (Windows exe)
         if: runner.os == 'Windows'
@@ -120,6 +141,21 @@ jobs:
         if: startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v2
         with:
+          # Static across the matrix jobs (last writer wins with identical content).
+          body: |
+            ### macOS — first launch
+
+            The `.dmg` app is ad-hoc signed but **not notarized**, so on first launch
+            macOS Gatekeeper blocks it (it may report the app as "damaged" or "from an
+            unidentified developer"). After dragging it to **Applications**, remove the
+            download quarantine flag once:
+
+            ```bash
+            xattr -cr /Applications/Minecraft.app
+            ```
+
+            Then open it normally. (Right-clicking the app and choosing **Open** also
+            works on most macOS versions.)
           files: |
             TechnoRunner-*.AppImage
             TechnoRunner-*.dmg

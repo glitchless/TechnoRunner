@@ -18,6 +18,19 @@ ctest --test-dir build --output-on-failure   # set QT_QPA_PLATFORM=offscreen whe
 
 Run: `./build/TechnoRunner`
 
+## Running a release build on macOS
+
+The `.dmg` ships an ad-hoc signed (but **not notarized**) `Minecraft.app`. The bundle's
+dylibs/frameworks are validly signed, so once the download quarantine flag is cleared the
+app launches on any Apple Silicon Mac. After dragging it to **Applications**:
+
+```bash
+xattr -cr /Applications/Minecraft.app   # clear the download quarantine flag, then open it
+```
+
+Right-clicking the app → **Open** also works on most macOS versions. (Full Gatekeeper
+trust without this step would require a Developer ID certificate + notarization.)
+
 ## Layout
 
 - `src/` — application sources (`util/`, `models/`, `net/`, `run/`, `app/`, `ui/`, `main.cpp`)
