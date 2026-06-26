@@ -162,7 +162,8 @@ int main(int argc, char** argv) {
 
     QObject::connect(boot, &Bootstrapper::finished, &app, [&] {
         splash.hide();
-        const bool launched = Launcher::run();
+        // Read the manifest-resolved java path before deleting boot below.
+        const bool launched = Launcher::run(boot->resolvedJavaPath(), Paths::launcherFile());
         qInfo() << "game process launch requested; startDetached returned" << launched;
         thread->quit();
         thread->wait();

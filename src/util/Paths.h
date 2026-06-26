@@ -10,9 +10,7 @@ public:
     static QString temporaryDirectory();
     static QString javaDirectory();
     static QString javaDirectory(const QString& code); // <base>/jre/<code>
-    static QString jrePathFile();
-    static void    writeJrePath(const QString& absoluteJavaPath);
-    static QString jrePath();
+    static QString manifestFile();                     // <base>/launcher.json (cached manifest)
     static QString launcherFile();
     static QString launcherOutLog();
     static QString launcherErrLog();

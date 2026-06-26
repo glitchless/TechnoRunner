@@ -4,7 +4,6 @@
 #include "net/LauncherDownloader.h"
 #include "util/Paths.h"
 #include <QNetworkAccessManager>
-#include <QFile>
 #include <QFileInfo>
 #include <QThread>
 #include <QDebug>
@@ -46,19 +45,22 @@ void Bootstrapper::checkAndDownloadAll() {
     LauncherDownloader ld(&dl);
     ld.init();
 
-    // JRE: download into jre/<code> if we don't already have a usable one.
-    QFile jf(Paths::jrePathFile());
-    QString existing;
-    if (jf.exists() && jf.open(QIODevice::ReadOnly)) { existing = QString::fromUtf8(jf.readAll()); jf.close(); }
-    const bool needJre = existing.isEmpty() || !QFileInfo::exists(existing);
-    qInfo().noquote() << "find: existing JRE path =" << (existing.isEmpty() ? QStringLiteral("(none)") : existing)
-                      << "needDownload =" << needJre;
+    // JRE: the java path is derived from the manifest (jre/<jreCode>/<javaRelativePath>),
+    // so it inherently tracks the version the server asks for — a stale JRE from an older
+    // launcher lives under a different jreCode dir and is simply never resolved. Download
+    // only when that exact path is missing.
+    const QString jreCode = ld.jreCode();
+    QString javaPath = JavaDownloader::javaPathFor(jreCode, ld.jreFiles());
+    const bool needJre = !javaPath.isEmpty() && !QFileInfo::exists(javaPath);
+    qInfo().noquote() << "find: java path =" << (javaPath.isEmpty() ? QStringLiteral("(no match)") : javaPath)
+                      << "manifest jreCode =" << jreCode << "needDownload =" << needJre;
     if (needJre) {
         JavaDownloader jd(&dl);
-        jd.setCandidates(ld.jreCode(), ld.jreFiles());
-        const QString javaPath = jd.download(this);
-        if (!javaPath.isEmpty()) Paths::writeJrePath(javaPath);
+        jd.setCandidates(jreCode, ld.jreFiles());
+        const QString dlPath = jd.download(this);
+        if (!dlPath.isEmpty()) javaPath = dlPath;
     }
+    resolvedJavaPath_ = javaPath;   // consumed by Launcher::run() after finished()
 
     qInfo() << "find: checking launcher.jar is up to date";
     if (!ld.checkFile()) ld.update(this);

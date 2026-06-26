@@ -33,6 +33,15 @@ void JavaDownloader::setCandidates(const QString& code, const QList<JavaBinaryMo
 
 bool JavaDownloader::hasMatch() const { return selected_.has_value(); }
 
+QString JavaDownloader::javaPathFor(const QString& code, const QList<JavaBinaryModel>& files) {
+    if (code.isEmpty()) return QString();
+    const auto m = selectForCurrentPlatform(files);
+    if (!m) return QString();
+    // cleanPath (not Paths::javaDirectory) so this stays side-effect-free — javaDirectory
+    // would mkpath the jre/<code> dir just for a check.
+    return QDir::cleanPath(Paths::baseDirectory() + "/jre/" + code + "/" + m->javaRelativePath);
+}
+
 void JavaDownloader::checkFileHash(const QString& path, const QString& expectedSha256Base64) {
     if (expectedSha256Base64.isEmpty()) {
         qInfo().noquote() << "verify: skip (no expected hash in manifest) for" << path;

@@ -1,6 +1,7 @@
 #include <QtTest>
 #include <QTemporaryDir>
 #include <QFile>
+#include <QFileInfo>
 #include "net/LauncherDownloader.h"
 #include "util/Paths.h"
 #include "util/Hash.h"
@@ -25,7 +26,9 @@ class LauncherDownloaderTest : public QObject {
     Q_OBJECT
     QTemporaryDir tmp_;
 private slots:
-    void init()    { Paths::setBaseOverride(tmp_.path()); }
+    // Remove any cached manifest from a prior test method (tmp_ is shared across methods)
+    // so each test starts with a clean cache state.
+    void init()    { Paths::setBaseOverride(tmp_.path()); QFile::remove(Paths::manifestFile()); }
     void cleanup() { Paths::setBaseOverride(QString()); }
 
     void checkFileFalseWhenMissing() {
@@ -66,6 +69,36 @@ private slots:
     }
     void jreEmptyWhenNoModel() {
         FakeLauncherDownloader d; d.manifest = "not json"; d.init();
+        QVERIFY(d.jreCode().isEmpty());
+        QVERIFY(d.jreFiles().isEmpty());
+    }
+
+    // --- manifest caching / offline fallback ---
+
+    void cachesManifestOnSuccessfulFetch() {
+        FakeLauncherDownloader d;
+        d.manifest = "{\"version\":\"9\",\"downloadFullPath\":\"u\",\"SHA-256\":\"h\","
+                     "\"jre\":{\"code\":\"jre21\",\"files\":[]}}";
+        d.init();
+        QVERIFY(QFileInfo::exists(Paths::manifestFile()));   // persisted for offline reuse
+        QFile f(Paths::manifestFile()); QVERIFY(f.open(QIODevice::ReadOnly));
+        QCOMPARE(f.readAll(), d.manifest);
+    }
+    void usesCachedManifestWhenFetchFails() {
+        // A good fetch first populates the cache...
+        { FakeLauncherDownloader good;
+          good.manifest = "{\"version\":\"9\",\"downloadFullPath\":\"u\",\"SHA-256\":\"h\","
+                          "\"jre\":{\"code\":\"jre21\",\"files\":[]}}";
+          good.init();
+          QCOMPARE(good.jreCode(), QStringLiteral("jre21")); }
+        // ...then a run whose fetch returns nothing (no network) falls back to the cache.
+        FakeLauncherDownloader offline; offline.manifest = QByteArray();
+        offline.init();
+        QCOMPARE(offline.jreCode(), QStringLiteral("jre21"));
+    }
+    void noModelWhenFetchFailsAndNoCache() {
+        FakeLauncherDownloader d; d.manifest = QByteArray();   // empty fetch, cache cleared by init()
+        d.init();
         QVERIFY(d.jreCode().isEmpty());
         QVERIFY(d.jreFiles().isEmpty());
     }

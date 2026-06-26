@@ -23,6 +23,9 @@ protected:
     // platform, else the single top-level downloadFullPath/SHA-256.
     QString selectedJarUrl() const;
     QString selectedJarSha() const;
+    // Load model_ from the on-disk cached manifest (Paths::manifestFile()). Returns true
+    // if a valid manifest was loaded. Used as the offline fallback when the fetch fails.
+    bool loadCachedManifest();
     Downloader* dl_;
     std::optional<LauncherModel> model_;
 };

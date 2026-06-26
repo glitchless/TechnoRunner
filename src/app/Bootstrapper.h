@@ -26,6 +26,12 @@ public:
 public slots:
     void run();
 
+public:
+    // Absolute path to the java the launcher should run, resolved from the manifest
+    // during checkAndDownloadAll(). Empty if no JRE matched (caller falls back to PATH).
+    // Read on the main thread only after the finished() signal.
+    QString resolvedJavaPath() const { return resolvedJavaPath_; }
+
 signals:
     void progressChanged(int progress);
     void maxChanged(int max);
@@ -35,6 +41,7 @@ signals:
 private:
     void checkAndDownloadAll();
     int current_ = 0;
+    QString resolvedJavaPath_;
 };
 
 }

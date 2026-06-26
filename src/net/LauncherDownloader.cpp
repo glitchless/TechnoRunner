@@ -19,23 +19,45 @@ QByteArray LauncherDownloader::fetchManifest() { return dl_->httpGet(kLauncherUr
 
 void LauncherDownloader::init() {
     qInfo().noquote() << "find: fetching launcher manifest" << kLauncherUrl;
-    try { model_ = LauncherModel::fromJson(fetchManifest()); }
-    catch (const std::exception& ex) {
-        qWarning().noquote() << "find: manifest fetch FAILED:" << ex.what();
-        model_ = std::nullopt;
+    QByteArray raw;
+    try { raw = fetchManifest(); }
+    catch (const std::exception& ex) { qWarning().noquote() << "find: manifest fetch FAILED:" << ex.what(); }
+    catch (...) { qWarning() << "find: manifest fetch FAILED (unknown)"; }
+
+    // fromJson returns nullopt (no throw) on empty/invalid/non-object JSON.
+    model_ = raw.isEmpty() ? std::nullopt : LauncherModel::fromJson(raw);
+    if (model_) {
+        // Persist the good manifest so a later run with no/failed network can still
+        // resolve the JRE + jar from this cache and launch offline.
+        QFile f(Paths::manifestFile());
+        if (f.open(QIODevice::WriteOnly)) { f.write(raw); f.close(); }
+        else qWarning().noquote() << "find: could not cache manifest at" << Paths::manifestFile();
+        qInfo().noquote() << "find: manifest parsed (network) — jreCode" << model_->jreCode
+                          << "jreFiles" << model_->jreFiles.size()
+                          << "launcherFiles" << model_->files.size();
+    } else {
+        // Network unavailable or garbage response → fall back to the last good manifest.
+        qWarning() << "find: manifest unavailable from network → trying cached copy";
+        loadCachedManifest();
     }
-    catch (...) {
-        qWarning().noquote() << "find: manifest fetch FAILED (unknown)";
+}
+
+bool LauncherDownloader::loadCachedManifest() {
+    QFile f(Paths::manifestFile());
+    if (!f.exists() || !f.open(QIODevice::ReadOnly)) {
+        qWarning().noquote() << "find: no cached manifest at" << Paths::manifestFile();
         model_ = std::nullopt;
+        return false;
     }
-    // fromJson returns nullopt (no throw) on invalid/non-object JSON, so guard the
-    // dereference — accessing an empty optional here is UB (was a SIGBUS crash).
+    model_ = LauncherModel::fromJson(f.readAll());
+    f.close();
     if (model_)
-        qInfo().noquote() << "find: manifest parsed — jreCode" << model_->jreCode
+        qInfo().noquote() << "find: using CACHED manifest (offline) — jreCode" << model_->jreCode
                           << "jreFiles" << model_->jreFiles.size()
                           << "launcherFiles" << model_->files.size();
     else
-        qWarning() << "find: manifest empty or invalid → no model";
+        qWarning() << "find: cached manifest invalid → no model";
+    return model_.has_value();
 }
 
 QString LauncherDownloader::jreCode() const { return model_ ? model_->jreCode : QString(); }

@@ -1,7 +1,9 @@
 #include <QtTest>
 #include <QTemporaryFile>
+#include <QTemporaryDir>
 #include "net/JavaDownloader.h"
 #include "util/Platform.h"
+#include "util/Paths.h"
 
 using namespace tprunner;
 
@@ -10,7 +12,11 @@ using namespace tprunner;
 class JavaDownloaderTest : public QObject {
     Q_OBJECT
     QList<JavaBinaryModel> list_;
+    QTemporaryDir tmp_;
 private slots:
+    void init()    { Paths::setBaseOverride(tmp_.path()); }
+    void cleanup() { Paths::setBaseOverride(QString()); }
+
     void initTestCase() {
         list_ = JavaBinaryModel::listFromJson(
             "[{\"type\":\"Linux\",\"arch\":\"x86_64\",\"extension\":\"tar.gz\",\"downloadUrl\":\"u1\",\"javaRelativePath\":\"p1\"},"
@@ -60,6 +66,31 @@ private slots:
     void hashCheckSkippedWhenEmpty() {
         QTemporaryFile f; QVERIFY(f.open()); f.write("abc"); f.close();
         JavaDownloader::checkFileHash(f.fileName(), QString()); // no-op, no throw
+    }
+
+    // javaPathFor resolves <base>/jre/<code>/<javaRelativePath> for this machine.
+    void javaPathForResolvesUnderJreCode() {
+        // Candidates covering every CI runner so the current platform always matches.
+        const auto files = JavaBinaryModel::listFromJson(
+            "[{\"type\":\"Linux\",\"arch\":\"x86_64\",\"extension\":\"tar.gz\",\"downloadUrl\":\"u\",\"javaRelativePath\":\"bin/java\"},"
+            "{\"type\":\"Windows\",\"arch\":\"x86_64\",\"extension\":\"zip\",\"downloadUrl\":\"u\",\"javaRelativePath\":\"bin/java.exe\"},"
+            "{\"type\":\"macOS\",\"arch\":\"x86_64\",\"extension\":\"tar.gz\",\"downloadUrl\":\"u\",\"javaRelativePath\":\"bin/java\"},"
+            "{\"type\":\"macOS\",\"arch\":\"arm\",\"extension\":\"tar.gz\",\"downloadUrl\":\"u\",\"javaRelativePath\":\"bin/java\"}]");
+        const QString p = JavaDownloader::javaPathFor(QStringLiteral("jre21"), files);
+        QVERIFY2(p.startsWith(tmp_.path() + "/jre/jre21/"), qPrintable(p));
+        QVERIFY(p.endsWith("/java") || p.endsWith("/java.exe"));
+    }
+    void javaPathForEmptyWhenNoMatchOrNoCode() {
+        // No entry for this platform → empty.
+        QVERIFY(JavaDownloader::javaPathFor(QStringLiteral("jre21"),
+                JavaBinaryModel::listFromJson("[]")).isEmpty());
+        // Empty jreCode → empty regardless of candidates.
+        const auto any = JavaBinaryModel::listFromJson(
+            "[{\"type\":\"Linux\",\"arch\":\"x86_64\",\"extension\":\"tar.gz\",\"downloadUrl\":\"u\",\"javaRelativePath\":\"bin/java\"},"
+            "{\"type\":\"Windows\",\"arch\":\"x86_64\",\"extension\":\"zip\",\"downloadUrl\":\"u\",\"javaRelativePath\":\"bin/java.exe\"},"
+            "{\"type\":\"macOS\",\"arch\":\"x86_64\",\"extension\":\"tar.gz\",\"downloadUrl\":\"u\",\"javaRelativePath\":\"bin/java\"},"
+            "{\"type\":\"macOS\",\"arch\":\"arm\",\"extension\":\"tar.gz\",\"downloadUrl\":\"u\",\"javaRelativePath\":\"bin/java\"}]");
+        QVERIFY(JavaDownloader::javaPathFor(QString(), any).isEmpty());
     }
 };
 

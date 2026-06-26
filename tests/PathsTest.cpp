@@ -16,7 +16,7 @@ private slots:
         QCOMPARE(Paths::baseDirectory(), tmp_.path());
         QCOMPARE(Paths::temporaryDirectory(), tmp_.path() + "/tmp");
         QCOMPARE(Paths::javaDirectory(),      tmp_.path() + "/jre");
-        QCOMPARE(Paths::jrePathFile(),        tmp_.path() + "/jrepath.txt");
+        QCOMPARE(Paths::manifestFile(),       tmp_.path() + "/launcher.json");
         QCOMPARE(Paths::launcherFile(),       tmp_.path() + "/launcher.jar");
         QVERIFY(QFileInfo::exists(tmp_.path() + "/tmp")); // created on demand
     }
@@ -24,19 +24,6 @@ private slots:
         QCOMPARE(Paths::javaDirectory(QStringLiteral("jre8_202")),
                  tmp_.path() + "/jre/jre8_202");
         QVERIFY(QFileInfo::exists(tmp_.path() + "/jre/jre8_202")); // created on demand
-    }
-    void jrePathFallsBackToJava() {
-        QCOMPARE(Paths::jrePath(), QStringLiteral("java")); // no jrepath.txt yet
-    }
-    void jrePathReadsWrittenValueWhenExists() {
-        const QString fakeJava = tmp_.path() + "/fakejava";
-        { QFile f(fakeJava); QVERIFY(f.open(QIODevice::WriteOnly)); }
-        Paths::writeJrePath(fakeJava);
-        QCOMPARE(Paths::jrePath(), fakeJava);
-    }
-    void jrePathFallsBackWhenTargetMissing() {
-        Paths::writeJrePath(tmp_.path() + "/does-not-exist");
-        QCOMPARE(Paths::jrePath(), QStringLiteral("java"));
     }
 };
 
