@@ -23,20 +23,35 @@ void LauncherDownloader::init() {
 QString LauncherDownloader::jreCode() const { return model_ ? model_->jreCode : QString(); }
 QList<JavaBinaryModel> LauncherDownloader::jreFiles() const { return model_ ? model_->jreFiles : QList<JavaBinaryModel>(); }
 
+QString LauncherDownloader::selectedJarUrl() const {
+    if (!model_) return QString();
+    if (const auto m = selectForCurrentPlatform(model_->files)) return m->downloadUrl;
+    return model_->downloadUrl;
+}
+
+QString LauncherDownloader::selectedJarSha() const {
+    if (!model_) return QString();
+    if (const auto m = selectForCurrentPlatform(model_->files)) return m->sha256;
+    return model_->sha256;
+}
+
 bool LauncherDownloader::checkFile() {
     if (!QFileInfo::exists(Paths::launcherFile())) return false;
     if (!model_) return true;                       // can't verify → assume OK (matches original)
-    return sha256Base64(Paths::launcherFile()) == model_->sha256;
+    return sha256Base64(Paths::launcherFile()) == selectedJarSha();
 }
 
 void LauncherDownloader::update(ProgressMonitor* monitor) {
     if (!model_) return;
+    const QString url = selectedJarUrl();
+    if (url.isEmpty()) return;
     if (monitor) monitor->setStatus(QObject::tr("Скачивание лаунчера..."));
     const QString updateFile = Paths::temporaryDirectory() + "/update_launcher.jar";
-    dl_->downloadToFile(model_->downloadUrl, updateFile, monitor);
+    dl_->downloadToFile(url, updateFile, monitor);
     if (monitor) monitor->setProgress(100);
 
-    if (sha256Base64(updateFile) != model_->sha256) return;   // verification failed → keep old jar
+    const QString sha = selectedJarSha();
+    if (!sha.isEmpty() && sha256Base64(updateFile) != sha) return;   // verification failed → keep old jar
 
     QFile launcher(Paths::launcherFile());
     if (!launcher.exists() || launcher.remove())

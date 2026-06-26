@@ -336,3 +336,12 @@ hash is skipped, so the checks are backward compatible:
    to system `java`.
 3. **After extraction — hash:** `checkFileHash` compares the extracted `java` binary's
    Base64 SHA-256 to `javaSHA-256`, catching extraction tampering/corruption.
+
+### Per-arch launcher jars
+
+The launcher jar may also be specified per platform via a top-level `files` array (same
+`{type, arch, downloadUrl, SHA-256}` shape as the JRE entries). `LauncherDownloader` picks
+the entry matching the current OS/arch (`selectForCurrentPlatform`) and uses its
+`downloadUrl` + `SHA-256` for `checkFile`/`update`; if no entry matches (or there's no
+array), it falls back to the single top-level `downloadFullPath`/`SHA-256`. OS/arch
+matching is the shared `matchBinary` used for JREs.

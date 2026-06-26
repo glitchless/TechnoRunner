@@ -70,6 +70,20 @@ private slots:
         QVERIFY(m.has_value());
         QVERIFY(m->jreCode.isEmpty());
         QVERIFY(m->jreFiles.isEmpty());
+        QVERIFY(m->files.isEmpty());
+    }
+    void parsesPerArchLauncherFiles() {
+        const QByteArray json =
+            "{\"version\":\"1\",\"downloadFullPath\":\"top\",\"SHA-256\":\"toph\",\"files\":["
+            "{\"type\":\"Linux\",\"arch\":\"x86_64\",\"downloadUrl\":\"lj\",\"SHA-256\":\"ljh\"},"
+            "{\"type\":\"macOS\",\"arch\":\"arm64\",\"downloadUrl\":\"mj\",\"SHA-256\":\"mjh\"}]}";
+        const auto m = LauncherModel::fromJson(json);
+        QVERIFY(m.has_value());
+        QCOMPARE(m->downloadUrl, QStringLiteral("top"));  // single fallback still parsed
+        QCOMPARE(m->files.size(), 2);
+        QCOMPARE(m->files[0].type, QStringLiteral("Linux"));
+        QCOMPARE(m->files[0].downloadUrl, QStringLiteral("lj"));
+        QCOMPARE(m->files[0].sha256, QStringLiteral("ljh"));
     }
 };
 

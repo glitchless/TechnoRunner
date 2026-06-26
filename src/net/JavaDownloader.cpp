@@ -16,10 +16,7 @@ JavaDownloader::JavaDownloader(Downloader* dl) : dl_(dl) {}
 
 std::optional<JavaBinaryModel> JavaDownloader::findMatch(
         const QList<JavaBinaryModel>& list, Os os, CpuArch arch) {
-    for (const auto& m : list)
-        if (osFromString(m.type) == os && archFromString(m.arch) == arch)
-            return m;
-    return std::nullopt;
+    return matchBinary(list, os, arch);
 }
 
 void JavaDownloader::setCandidates(const QString& code, const QList<JavaBinaryModel>& files) {

@@ -1,4 +1,5 @@
 #include "models/Models.h"
+#include "util/Platform.h"
 #include <QJsonDocument>
 #include <QJsonArray>
 #include <QJsonObject>
@@ -35,12 +36,26 @@ std::optional<LauncherModel> LauncherModel::fromJson(const QByteArray& json) {
     m.downloadUrl = o.value("downloadFullPath").toString();
     m.sha256      = o.value("SHA-256").toString();
 
+    for (const QJsonValue& v : o.value("files").toArray())
+        m.files.append(JavaBinaryModel::fromJsonObject(v.toObject()));
+
     const QJsonObject jre = o.value("jre").toObject();
     m.jreCode = jre.value("code").toString();
     for (const QJsonValue& v : jre.value("files").toArray())
         m.jreFiles.append(JavaBinaryModel::fromJsonObject(v.toObject()));
 
     return m;
+}
+
+std::optional<JavaBinaryModel> matchBinary(const QList<JavaBinaryModel>& list, Os os, CpuArch arch) {
+    for (const auto& m : list)
+        if (osFromString(m.type) == os && archFromString(m.arch) == arch)
+            return m;
+    return std::nullopt;
+}
+
+std::optional<JavaBinaryModel> selectForCurrentPlatform(const QList<JavaBinaryModel>& list) {
+    return matchBinary(list, currentOs(), currentArch());
 }
 
 }
