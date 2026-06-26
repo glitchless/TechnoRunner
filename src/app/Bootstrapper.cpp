@@ -41,20 +41,23 @@ void Bootstrapper::checkAndDownloadAll() {
     QNetworkAccessManager nam;
     Downloader dl(&nam);
 
-    const QString jrePathFile = Paths::jrePathFile();
-    QFile jf(jrePathFile);
+    // launcher.json is the single manifest: it carries both the launcher jar info
+    // and the embedded JRE descriptor (jre.code + jre.files).
+    LauncherDownloader ld(&dl);
+    ld.init();
+
+    // JRE: download into jre/<code> if we don't already have a usable one.
+    QFile jf(Paths::jrePathFile());
     QString existing;
     if (jf.exists() && jf.open(QIODevice::ReadOnly)) { existing = QString::fromUtf8(jf.readAll()); jf.close(); }
     const bool needJre = existing.isEmpty() || !QFileInfo::exists(existing);
     if (needJre) {
         JavaDownloader jd(&dl);
-        jd.init();
+        jd.setCandidates(ld.jreCode(), ld.jreFiles());
         const QString javaPath = jd.download(this);
         if (!javaPath.isEmpty()) Paths::writeJrePath(javaPath);
     }
 
-    LauncherDownloader ld(&dl);
-    ld.init();
     if (!ld.checkFile()) ld.update(this);
 }
 

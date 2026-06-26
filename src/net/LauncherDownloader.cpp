@@ -20,6 +20,9 @@ void LauncherDownloader::init() {
     catch (...) { model_ = std::nullopt; }
 }
 
+QString LauncherDownloader::jreCode() const { return model_ ? model_->jreCode : QString(); }
+QList<JavaBinaryModel> LauncherDownloader::jreFiles() const { return model_ ? model_->jreFiles : QList<JavaBinaryModel>(); }
+
 bool LauncherDownloader::checkFile() {
     if (!QFileInfo::exists(Paths::launcherFile())) return false;
     if (!model_) return true;                       // can't verify → assume OK (matches original)

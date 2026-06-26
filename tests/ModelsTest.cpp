@@ -36,6 +36,35 @@ private slots:
     void invalidLauncherJsonReturnsNullopt() {
         QVERIFY(!LauncherModel::fromJson("not json").has_value());
     }
+    void parsesEmbeddedJreBlock() {
+        const QByteArray json =
+            "{\"version\":\"1.2.06221630\","
+            "\"downloadFullPath\":\"https://minecraft.glitchless.ru/1.2.06221630.jar\","
+            "\"SHA-256\":\"Nw1NQPLhV1V7Xg06b+XK0yry2M6x0zyxFIOHxvPM0uM=\","
+            "\"jre\":{\"code\":\"jre8_202\",\"files\":["
+            "{\"type\":\"Linux\",\"arch\":\"x86\",\"extension\":\"tar.gz\",\"downloadUrl\":\"https://x/li586.tar.gz\",\"javaRelativePath\":\"jre1.8.0_202/bin/java\"},"
+            "{\"type\":\"Linux\",\"arch\":\"x86_64\",\"extension\":\"tar.gz\",\"downloadUrl\":\"https://x/lx64.tar.gz\",\"javaRelativePath\":\"jre1.8.0_202/bin/java\"},"
+            "{\"type\":\"Windows\",\"arch\":\"x86_64\",\"extension\":\"tar.gz\",\"downloadUrl\":\"https://x/wx64.tar.gz\",\"javaRelativePath\":\"jre1.8.0_202/bin/java.exe\"},"
+            "{\"type\":\"macOS\",\"arch\":\"x86_64\",\"extension\":\"tar.gz\",\"downloadUrl\":\"https://x/mx64.tar.gz\",\"javaRelativePath\":\"jre1.8.0_202.jre/Contents/Home/bin/java\"}"
+            "]}}";
+        const auto m = LauncherModel::fromJson(json);
+        QVERIFY(m.has_value());
+        QCOMPARE(m->sha256, QStringLiteral("Nw1NQPLhV1V7Xg06b+XK0yry2M6x0zyxFIOHxvPM0uM="));
+        QCOMPARE(m->jreCode, QStringLiteral("jre8_202"));
+        QCOMPARE(m->jreFiles.size(), 4);
+        QCOMPARE(m->jreFiles[1].type, QStringLiteral("Linux"));
+        QCOMPARE(m->jreFiles[1].arch, QStringLiteral("x86_64"));
+        QCOMPARE(m->jreFiles[1].extension, QStringLiteral("tar.gz"));
+        QCOMPARE(m->jreFiles[3].javaRelativePath,
+                 QStringLiteral("jre1.8.0_202.jre/Contents/Home/bin/java"));
+    }
+    void oldLauncherFormatHasEmptyJre() { // backward tolerant
+        const auto m = LauncherModel::fromJson(
+            "{\"version\":\"1\",\"downloadFullPath\":\"u\",\"SHA-256\":\"h\"}");
+        QVERIFY(m.has_value());
+        QVERIFY(m->jreCode.isEmpty());
+        QVERIFY(m->jreFiles.isEmpty());
+    }
 };
 
 QTEST_APPLESS_MAIN(ModelsTest)

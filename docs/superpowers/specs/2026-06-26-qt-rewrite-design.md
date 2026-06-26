@@ -296,3 +296,29 @@ Remaining:
 3. **QProcess detached + redirection quoting** per OS (paths with spaces).
 4. **Qt deployment size** (~20–40 MB with Widgets+Network) — acceptable, still far smaller
    than embedding a JRE.
+
+## 13. Addendum (2026-06-26): JRE moved into `launcher.json`
+
+The server consolidated the JRE descriptor into the launcher manifest, superseding the
+separate `jres.json` endpoint:
+
+```jsonc
+{
+  "version": "...", "downloadFullPath": "...", "SHA-256": "...",
+  "jre": {
+    "code": "jre8_202",                 // names the install subfolder
+    "files": [ { "type","arch","extension","downloadUrl","javaRelativePath" }, ... ]
+  }
+}
+```
+
+Contract changes:
+- The runner fetches **only** `launcher.json` (one request); the `jres.json` endpoint and
+  its committed reference copy are removed.
+- The JRE is extracted into a **code-named subfolder**: `<base>/technomine/jre/<code>`
+  (e.g. `.../jre/jre8_202`), instead of the flat `jre/`. `jrepath.txt` stores the absolute
+  path to the `java` binary inside it.
+- `LauncherModel` now also carries `jreCode` + `jreFiles`; `JavaDownloader::setCandidates(code, files)`
+  replaces the old `init()` that fetched `jres.json`. Flow order is now: fetch manifest →
+  (if needed) download JRE → check/replace launcher jar.
+- `needJre` is still decided by `jrepath.txt` (missing/empty/dangling), unchanged.

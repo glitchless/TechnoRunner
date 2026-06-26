@@ -13,13 +13,16 @@ enum class CpuArch;
 class JavaDownloader {
 public:
     explicit JavaDownloader(Downloader* dl);
-    void init();
+    // Configure from the launcher manifest's "jre" block: `code` names the install
+    // subfolder (jre/<code>); `files` are the per-OS/arch candidates.
+    void setCandidates(const QString& code, const QList<JavaBinaryModel>& files);
     bool hasMatch() const;
-    QString download(ProgressMonitor* monitor);   // returns absolute java path, or "" if no match
+    QString download(ProgressMonitor* monitor);   // extracts to jre/<code>, returns java path or "" if no match
     static std::optional<JavaBinaryModel> findMatch(const QList<JavaBinaryModel>& list,
                                                     Os os, CpuArch arch);
 private:
     Downloader* dl_;
+    QString code_;
     std::optional<JavaBinaryModel> selected_;
 };
 

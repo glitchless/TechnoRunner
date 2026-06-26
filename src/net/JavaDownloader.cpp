@@ -9,8 +9,6 @@
 
 namespace tprunner {
 
-namespace { const char* kJresUrl = "https://minecraft.glitchless.ru/jres.json"; }
-
 JavaDownloader::JavaDownloader(Downloader* dl) : dl_(dl) {}
 
 std::optional<JavaBinaryModel> JavaDownloader::findMatch(
@@ -21,10 +19,9 @@ std::optional<JavaBinaryModel> JavaDownloader::findMatch(
     return std::nullopt;
 }
 
-void JavaDownloader::init() {
-    const QByteArray json = dl_->httpGet(kJresUrl);
-    const auto list = JavaBinaryModel::listFromJson(json);
-    selected_ = findMatch(list, currentOs(), currentArch());
+void JavaDownloader::setCandidates(const QString& code, const QList<JavaBinaryModel>& files) {
+    code_ = code;
+    selected_ = findMatch(files, currentOs(), currentArch());
 }
 
 bool JavaDownloader::hasMatch() const { return selected_.has_value(); }
@@ -33,17 +30,18 @@ QString JavaDownloader::download(ProgressMonitor* monitor) {
     if (!selected_) return QString();
     const JavaBinaryModel& jb = *selected_;
 
+    const QString destDir = Paths::javaDirectory(code_);   // jre/<code>
     const QString jreArchive = Paths::temporaryDirectory() + "/jre." + jb.extension;
     if (monitor) monitor->setStatus(QObject::tr("Загрузка Java..."));
     dl_->downloadToFile(jb.downloadUrl, jreArchive, monitor);
     if (monitor) monitor->setProgress(100);
 
     if (jb.extension.compare("zip", Qt::CaseInsensitive) == 0)
-        Archive::extractZip(jreArchive, Paths::javaDirectory());
+        Archive::extractZip(jreArchive, destDir);
     else
-        Archive::extractTarGz(jreArchive, Paths::javaDirectory());
+        Archive::extractTarGz(jreArchive, destDir);
 
-    return QDir(Paths::javaDirectory()).filePath(jb.javaRelativePath);
+    return QDir(destDir).filePath(jb.javaRelativePath);
 }
 
 }

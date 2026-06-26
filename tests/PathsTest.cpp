@@ -20,6 +20,11 @@ private slots:
         QCOMPARE(Paths::launcherFile(),       tmp_.path() + "/launcher.jar");
         QVERIFY(QFileInfo::exists(tmp_.path() + "/tmp")); // created on demand
     }
+    void javaDirectoryWithCode() {
+        QCOMPARE(Paths::javaDirectory(QStringLiteral("jre8_202")),
+                 tmp_.path() + "/jre/jre8_202");
+        QVERIFY(QFileInfo::exists(tmp_.path() + "/jre/jre8_202")); // created on demand
+    }
     void jrePathFallsBackToJava() {
         QCOMPARE(Paths::jrePath(), QStringLiteral("java")); // no jrepath.txt yet
     }

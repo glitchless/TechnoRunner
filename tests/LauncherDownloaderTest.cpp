@@ -52,6 +52,23 @@ private slots:
         FakeLauncherDownloader d; d.manifest = "not json"; d.init();
         QVERIFY(d.checkFile());
     }
+    void exposesEmbeddedJre() {
+        FakeLauncherDownloader d;
+        d.manifest =
+            "{\"version\":\"1.2\",\"downloadFullPath\":\"u\",\"SHA-256\":\"h\","
+            "\"jre\":{\"code\":\"jre8_202\",\"files\":["
+            "{\"type\":\"Linux\",\"arch\":\"x86_64\",\"extension\":\"tar.gz\",\"downloadUrl\":\"lu\",\"javaRelativePath\":\"lp\"}"
+            "]}}";
+        d.init();
+        QCOMPARE(d.jreCode(), QStringLiteral("jre8_202"));
+        QCOMPARE(d.jreFiles().size(), 1);
+        QCOMPARE(d.jreFiles()[0].downloadUrl, QStringLiteral("lu"));
+    }
+    void jreEmptyWhenNoModel() {
+        FakeLauncherDownloader d; d.manifest = "not json"; d.init();
+        QVERIFY(d.jreCode().isEmpty());
+        QVERIFY(d.jreFiles().isEmpty());
+    }
 };
 
 QTEST_APPLESS_MAIN(LauncherDownloaderTest)

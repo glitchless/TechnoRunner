@@ -9,6 +9,7 @@ public:
     static QString baseDirectory();
     static QString temporaryDirectory();
     static QString javaDirectory();
+    static QString javaDirectory(const QString& code); // <base>/jre/<code>
     static QString jrePathFile();
     static void    writeJrePath(const QString& absoluteJavaPath);
     static QString jrePath();

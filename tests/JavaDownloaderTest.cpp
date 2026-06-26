@@ -28,6 +28,22 @@ private slots:
         const auto m = JavaDownloader::findMatch(list_, Os::Windows, CpuArch::X86_64);
         QVERIFY(!m.has_value());
     }
+    void setCandidatesMatchesCurrentMachine() {
+        // Candidates covering every CI runner (linux/win x64, macOS x64/arm) → always a match.
+        const auto files = JavaBinaryModel::listFromJson(
+            "[{\"type\":\"Linux\",\"arch\":\"x86_64\",\"extension\":\"tar.gz\",\"downloadUrl\":\"u\",\"javaRelativePath\":\"p\"},"
+            "{\"type\":\"Windows\",\"arch\":\"x86_64\",\"extension\":\"tar.gz\",\"downloadUrl\":\"u\",\"javaRelativePath\":\"p\"},"
+            "{\"type\":\"macOS\",\"arch\":\"x86_64\",\"extension\":\"tar.gz\",\"downloadUrl\":\"u\",\"javaRelativePath\":\"p\"},"
+            "{\"type\":\"macOS\",\"arch\":\"arm\",\"extension\":\"tar.gz\",\"downloadUrl\":\"u\",\"javaRelativePath\":\"p\"}]");
+        JavaDownloader jd(nullptr);
+        jd.setCandidates(QStringLiteral("jre8_202"), files);
+        QVERIFY(jd.hasMatch());
+    }
+    void setCandidatesEmptyHasNoMatch() {
+        JavaDownloader jd(nullptr);
+        jd.setCandidates(QStringLiteral("jre8_202"), {});
+        QVERIFY(!jd.hasMatch());
+    }
 };
 
 QTEST_APPLESS_MAIN(JavaDownloaderTest)
