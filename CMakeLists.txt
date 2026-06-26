@@ -52,3 +52,6 @@ tprunner_add_test(DownloaderTest tests/DownloaderTest.cpp)
 
 target_sources(tprunner_lib PRIVATE src/net/JavaDownloader.cpp)
 tprunner_add_test(JavaDownloaderTest tests/JavaDownloaderTest.cpp)
+
+target_sources(tprunner_lib PRIVATE src/net/LauncherDownloader.cpp)
+tprunner_add_test(LauncherDownloaderTest tests/LauncherDownloaderTest.cpp)
