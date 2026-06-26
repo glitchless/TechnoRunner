@@ -33,3 +33,6 @@ tprunner_add_test(SmokeTest tests/SmokeTest.cpp)
 
 target_sources(tprunner_lib PRIVATE src/util/Hash.cpp)
 tprunner_add_test(HashTest tests/HashTest.cpp)
+
+target_sources(tprunner_lib PRIVATE src/util/Platform.cpp)
+tprunner_add_test(PlatformTest tests/PlatformTest.cpp)
