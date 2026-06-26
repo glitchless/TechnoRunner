@@ -1,5 +1,12 @@
 {
   "name": "technorunner",
   "version-string": "1.0.0",
-  "dependencies": [ "libarchive" ]
+  "dependencies": [
+    "libarchive",
+    {
+      "name": "qtbase",
+      "default-features": false,
+      "features": [ "gui", "widgets", "network", "png", "jpeg", "freetype", "harfbuzz", "testlib" ]
+    }
+  ]
 }

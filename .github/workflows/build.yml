@@ -23,7 +23,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # Windows gets a static Qt from vcpkg (see vcpkg.json) for a single-exe
+      # build; Linux/macOS use the prebuilt dynamic Qt from aqt.
       - name: Install Qt
+        if: runner.os != 'Windows'
         uses: jurplel/install-qt-action@v4
         with:
           version: '6.8.*'
@@ -57,7 +60,11 @@ jobs:
         shell: bash
         run: |
           if [ "${{ runner.os }}" = "Windows" ]; then
-            cmake -B build -S . -DCMAKE_TOOLCHAIN_FILE="$VCPKG_INSTALLATION_ROOT/scripts/buildsystems/vcpkg.cmake"
+            # Static triplet -> Qt, libarchive and the CRT all link into the exe.
+            cmake -B build -S . \
+              -DCMAKE_TOOLCHAIN_FILE="$VCPKG_INSTALLATION_ROOT/scripts/buildsystems/vcpkg.cmake" \
+              -DVCPKG_TARGET_TRIPLET=x64-windows-static \
+              -DCMAKE_MSVC_RUNTIME_LIBRARY='MultiThreaded$<$<CONFIG:Debug>:Debug>'
           else
             # macOS auto-detects the keg-only libarchive prefix in CMakeLists.txt.
             cmake -B build -S .
@@ -92,23 +99,13 @@ jobs:
           macdeployqt build/Minecraft.app -dmg
           mv build/Minecraft.dmg TechnoRunner-${{ matrix.name }}.dmg
 
-      - name: Package (Windows zip)
+      - name: Package (Windows exe)
         if: runner.os == 'Windows'
         shell: bash
         run: |
-          mkdir dist
-          # The VS generator outputs to build/Release/, where VCPKG_APPLOCAL_DEPS has
-          # already copied libarchive (archive.dll) and its dependency DLLs (z, bz2,
-          # liblzma, lz4, zstd, libcrypto) next to the exe. Ship the exe plus those
-          # DLLs; windeployqt then adds the Qt runtime.
-          if [ -d build/Release ]; then
-            cp build/Release/TechnoRunner.exe build/Release/*.dll dist/
-          else
-            cp build/TechnoRunner.exe dist/
-            cp build/vcpkg_installed/x64-windows/bin/*.dll dist/
-          fi
-          windeployqt dist/TechnoRunner.exe
-          7z a TechnoRunner-${{ matrix.name }}.zip ./dist/*
+          # Fully static build (static Qt + libarchive + CRT): the exe has no
+          # external DLL dependencies, so it ships as a single self-contained file.
+          cp build/Release/TechnoRunner.exe TechnoRunner-${{ matrix.name }}.exe
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
@@ -117,7 +114,7 @@ jobs:
           path: |
             TechnoRunner-*.AppImage
             TechnoRunner-*.dmg
-            TechnoRunner-*.zip
+            TechnoRunner-*.exe
 
       - name: Release on tag
         if: startsWith(github.ref, 'refs/tags/')
@@ -126,4 +123,4 @@ jobs:
           files: |
             TechnoRunner-*.AppImage
             TechnoRunner-*.dmg
-            TechnoRunner-*.zip
+            TechnoRunner-*.exe

@@ -1,4 +1,8 @@
 cmake_minimum_required(VERSION 3.21)
+# Set CMP0091 NEW *before* project() so CMAKE_MSVC_RUNTIME_LIBRARY is honored —
+# the Windows static build passes -DCMAKE_MSVC_RUNTIME_LIBRARY=MultiThreaded to
+# link the static CRT (/MT) and match vcpkg's x64-windows-static libraries.
+cmake_policy(SET CMP0091 NEW)
 project(TechnoRunner VERSION 1.0.0 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 17)
@@ -34,6 +38,16 @@ qt_add_executable(TechnoRunner src/main.cpp resources/resources.qrc)
 target_link_libraries(TechnoRunner PRIVATE tprunner_lib)
 set_target_properties(TechnoRunner PROPERTIES WIN32_EXECUTABLE ON MACOSX_BUNDLE ON)
 
+# A static Qt build (Windows single-exe) links plugins into the binary instead of
+# loading them from disk, so the ones we use must be imported explicitly. Guarded
+# by WIN32 + static so shared Qt (Linux/macOS) is untouched and the Windows-only
+# plugin targets are never referenced elsewhere.
+if(WIN32 AND NOT QT6_IS_SHARED_LIBS_BUILD)
+    qt_import_plugins(TechnoRunner INCLUDE
+        Qt6::QWindowsIntegrationPlugin   # GUI platform plugin
+        Qt6::QJpegPlugin)                # background.jpeg (PNG is built into QtGui)
+endif()
+
 if(APPLE)
     # Bundle dir must be "Minecraft.app" (matches the current release) so it replaces
     # an existing install in place. CMake names the .app and the inner executable after
@@ -53,6 +67,15 @@ enable_testing()
 function(tprunner_add_test name)
     qt_add_executable(${name} ${ARGN})
     target_link_libraries(${name} PRIVATE tprunner_lib Qt6::Test)
+    # Tests run headless (QT_QPA_PLATFORM=offscreen). The offscreen platform plugin
+    # is NOT one of Qt's default-imported static plugins, so a static build must
+    # import it or the test aborts with "no Qt platform plugin could be initialized".
+    # QJpegPlugin is needed by SplashScreenTest, which loads background.jpeg.
+    if(WIN32 AND NOT QT6_IS_SHARED_LIBS_BUILD)
+        qt_import_plugins(${name} INCLUDE
+            Qt6::QOffscreenIntegrationPlugin
+            Qt6::QJpegPlugin)
+    endif()
     add_test(NAME ${name} COMMAND ${name})
 endfunction()
 
