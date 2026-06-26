@@ -39,3 +39,6 @@ tprunner_add_test(PlatformTest tests/PlatformTest.cpp)
 
 target_sources(tprunner_lib PRIVATE src/util/Paths.cpp)
 tprunner_add_test(PathsTest tests/PathsTest.cpp)
+
+target_sources(tprunner_lib PRIVATE src/models/Models.cpp)
+tprunner_add_test(ModelsTest tests/ModelsTest.cpp)
