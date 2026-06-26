@@ -32,9 +32,9 @@ jobs:
         if: runner.os == 'macOS'
         run: brew install libarchive
 
-      - name: Install libarchive (Windows)
-        if: runner.os == 'Windows'
-        run: vcpkg install libarchive:x64-windows
+      # Windows deps come from the vcpkg.json manifest. In manifest mode the
+      # vcpkg CMake toolchain auto-installs them at configure time (with a
+      # triplet matching the build), so no explicit `vcpkg install` step is needed.
 
       - name: Configure
         shell: bash
