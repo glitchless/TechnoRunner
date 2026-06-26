@@ -49,3 +49,6 @@ target_compile_definitions(ArchiveTest PRIVATE SRCDIR="${CMAKE_CURRENT_SOURCE_DI
 
 target_sources(tprunner_lib PRIVATE src/net/Downloader.cpp)
 tprunner_add_test(DownloaderTest tests/DownloaderTest.cpp)
+
+target_sources(tprunner_lib PRIVATE src/net/JavaDownloader.cpp)
+tprunner_add_test(JavaDownloaderTest tests/JavaDownloaderTest.cpp)
