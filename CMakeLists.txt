@@ -30,3 +30,6 @@ function(tprunner_add_test name)
 endfunction()
 
 tprunner_add_test(SmokeTest tests/SmokeTest.cpp)
+
+target_sources(tprunner_lib PRIVATE src/util/Hash.cpp)
+tprunner_add_test(HashTest tests/HashTest.cpp)
