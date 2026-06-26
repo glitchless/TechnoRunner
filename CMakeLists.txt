@@ -61,3 +61,6 @@ tprunner_add_test(LauncherTest tests/LauncherTest.cpp)
 
 target_sources(tprunner_lib PRIVATE src/app/Bootstrapper.cpp)
 tprunner_add_test(BootstrapperTest tests/BootstrapperTest.cpp)
+
+target_sources(tprunner_lib PRIVATE src/ui/GProgressBar.cpp)
+tprunner_add_test(GProgressBarTest tests/GProgressBarTest.cpp)
