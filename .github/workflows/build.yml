@@ -13,7 +13,6 @@ jobs:
         include:
           - { os: ubuntu-latest,  name: linux-x86_64,  arch: x86_64 }
           - { os: windows-latest, name: windows-x86_64, arch: x86_64 }
-          - { os: macos-13,       name: macos-x86_64,   arch: x86_64 }
           - { os: macos-14,       name: macos-arm64,    arch: arm64 }
     runs-on: ${{ matrix.os }}
     steps:
@@ -42,9 +41,8 @@ jobs:
         run: |
           if [ "${{ runner.os }}" = "Windows" ]; then
             cmake -B build -S . -DCMAKE_TOOLCHAIN_FILE="$VCPKG_INSTALLATION_ROOT/scripts/buildsystems/vcpkg.cmake"
-          elif [ "${{ runner.os }}" = "macOS" ]; then
-            cmake -B build -S . -DCMAKE_PREFIX_PATH="$(brew --prefix libarchive)"
           else
+            # macOS auto-detects the keg-only libarchive prefix in CMakeLists.txt.
             cmake -B build -S .
           fi
 

@@ -10,6 +10,7 @@
 #include <QGuiApplication>
 #include <QScreen>
 #include <QCursor>
+#include <QDebug>
 #include <cstdlib>
 
 namespace tprunner {
@@ -46,7 +47,10 @@ SplashScreen::SplashScreen(QWidget* parent) : QWidget(parent) {
     closeBtn->setCursor(Qt::PointingHandCursor);
     closeBtn->setStyleSheet("border: none; background: transparent;");
     closeBtn->move(bg.width() - closeIcon.width() - 13, 13);
-    connect(closeBtn, &QPushButton::clicked, this, []{ std::exit(0); });
+    connect(closeBtn, &QPushButton::clicked, this, []{
+        qInfo() << "app closing: splash close button clicked, std::exit(0)";
+        std::exit(0);
+    });
 
     root->addWidget(background_);
 

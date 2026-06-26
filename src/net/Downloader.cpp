@@ -5,7 +5,9 @@
 #include <QNetworkReply>
 #include <QEventLoop>
 #include <QFile>
+#include <QFileInfo>
 #include <QUrl>
+#include <QDebug>
 #include <stdexcept>
 
 namespace tprunner {
@@ -22,6 +24,7 @@ QNetworkRequest makeRequest(const QString& url) {
 }
 
 QByteArray Downloader::httpGet(const QString& url) {
+    qInfo().noquote() << "download: GET" << url;
     QNetworkReply* reply = nam_->get(makeRequest(url));
     QEventLoop loop;
     QObject::connect(reply, &QNetworkReply::finished, &loop, &QEventLoop::quit);
@@ -29,15 +32,21 @@ QByteArray Downloader::httpGet(const QString& url) {
     const QNetworkReply::NetworkError err = reply->error();
     const QByteArray data = reply->readAll();
     reply->deleteLater();
-    if (err != QNetworkReply::NoError)
+    if (err != QNetworkReply::NoError) {
+        qWarning().noquote() << "download: GET failed" << url << "error" << err;
         throw std::runtime_error(("GET failed: " + url).toStdString());
+    }
+    qInfo().noquote() << "download: GET ok" << url << "(" << data.size() << "bytes)";
     return data;
 }
 
 void Downloader::downloadToFile(const QString& url, const QString& destPath, ProgressMonitor* monitor) {
+    qInfo().noquote() << "download: file" << url << "->" << destPath;
     QFile file(destPath);
-    if (!file.open(QIODevice::WriteOnly))
+    if (!file.open(QIODevice::WriteOnly)) {
+        qWarning().noquote() << "download: cannot open for write" << destPath;
         throw std::runtime_error(("cannot open for write: " + destPath).toStdString());
+    }
 
     QNetworkReply* reply = nam_->get(makeRequest(url));
     QEventLoop loop;
@@ -60,8 +69,11 @@ void Downloader::downloadToFile(const QString& url, const QString& destPath, Pro
     reply->deleteLater();
     if (err != QNetworkReply::NoError) {
         QFile::remove(destPath);
+        qWarning().noquote() << "download: file failed" << url << "error" << err;
         throw std::runtime_error(("download failed: " + url).toStdString());
     }
+    qInfo().noquote() << "download: file ok" << destPath
+                      << "(" << QFileInfo(destPath).size() << "bytes)";
 }
 
 }

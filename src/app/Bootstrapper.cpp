@@ -51,6 +51,8 @@ void Bootstrapper::checkAndDownloadAll() {
     QString existing;
     if (jf.exists() && jf.open(QIODevice::ReadOnly)) { existing = QString::fromUtf8(jf.readAll()); jf.close(); }
     const bool needJre = existing.isEmpty() || !QFileInfo::exists(existing);
+    qInfo().noquote() << "find: existing JRE path =" << (existing.isEmpty() ? QStringLiteral("(none)") : existing)
+                      << "needDownload =" << needJre;
     if (needJre) {
         JavaDownloader jd(&dl);
         jd.setCandidates(ld.jreCode(), ld.jreFiles());
@@ -58,15 +60,20 @@ void Bootstrapper::checkAndDownloadAll() {
         if (!javaPath.isEmpty()) Paths::writeJrePath(javaPath);
     }
 
+    qInfo() << "find: checking launcher.jar is up to date";
     if (!ld.checkFile()) ld.update(this);
+    else                 qInfo() << "find: launcher.jar already up to date";
 }
 
 void Bootstrapper::run() {
     const bool ok = tryExponential(10, *this,
         [this]{ checkAndDownloadAll(); },
         [](int s){ QThread::sleep(s); });
-    if (!ok)
+    if (!ok) {
+        qWarning() << "bootstrap failed after all retries (no network?); "
+                      "will still attempt launch then exit";
         setStatus(QStringLiteral("Ошибка при загрузке. Проверьте подключение интернета"));
+    }
     emit finished();
 }
 

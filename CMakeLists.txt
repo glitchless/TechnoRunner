@@ -7,6 +7,19 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 
 find_package(Qt6 REQUIRED COMPONENTS Widgets Network Test)
+
+# Homebrew's libarchive is keg-only (macOS ships its own), so it isn't on CMake's
+# default search path. Auto-detect the keg prefix so find_package works without a
+# manually-passed -DCMAKE_PREFIX_PATH.
+if(APPLE)
+    execute_process(COMMAND brew --prefix libarchive
+        OUTPUT_VARIABLE LIBARCHIVE_PREFIX OUTPUT_STRIP_TRAILING_WHITESPACE
+        ERROR_QUIET)
+    if(LIBARCHIVE_PREFIX)
+        list(APPEND CMAKE_PREFIX_PATH "${LIBARCHIVE_PREFIX}")
+    endif()
+endif()
+
 find_package(LibArchive REQUIRED)
 
 qt_standard_project_setup()
