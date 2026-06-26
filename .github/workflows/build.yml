@@ -27,7 +27,7 @@ jobs:
 
       - name: Install libarchive (Linux)
         if: runner.os == 'Linux'
-        run: sudo apt-get update && sudo apt-get install -y libarchive-dev libfuse2
+        run: sudo apt-get update && sudo apt-get install -y libarchive-dev libfuse2 imagemagick
 
       - name: Install libarchive (macOS)
         if: runner.os == 'macOS'
@@ -65,15 +65,15 @@ jobs:
           mkdir -p AppDir/usr/bin && cp build/TechnoRunner AppDir/usr/bin/
           mkdir -p AppDir/usr/share/applications AppDir/usr/share/icons/hicolor/256x256/apps
           printf '[Desktop Entry]\nType=Application\nName=TechnoRunner\nExec=TechnoRunner\nIcon=technorunner\nCategories=Game;\n' > AppDir/usr/share/applications/technorunner.desktop
-          cp resources/background.jpeg AppDir/usr/share/icons/hicolor/256x256/apps/technorunner.png || true
+          convert resources/background.jpeg -resize 256x256! AppDir/usr/share/icons/hicolor/256x256/apps/technorunner.png
           ./linuxdeploy-x86_64.AppImage --appdir AppDir --plugin qt --output appimage
           mv TechnoRunner*.AppImage TechnoRunner-${{ matrix.name }}.AppImage
 
       - name: Package (macOS dmg)
         if: runner.os == 'macOS'
         run: |
-          macdeployqt build/glitchless-minecraft.app -dmg
-          mv build/glitchless-minecraft.dmg TechnoRunner-${{ matrix.name }}.dmg
+          macdeployqt build/Minecraft.app -dmg
+          mv build/Minecraft.dmg TechnoRunner-${{ matrix.name }}.dmg
 
       - name: Package (Windows zip)
         if: runner.os == 'Windows'

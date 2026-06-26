@@ -26,6 +26,7 @@ int main(int argc, char** argv) {
         Launcher::run();
         thread->quit();
         thread->wait();
+        delete boot;           // worker thread has stopped; safe to delete here
         app.exit(0);
     });
 

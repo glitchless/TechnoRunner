@@ -22,10 +22,12 @@ target_link_libraries(TechnoRunner PRIVATE tprunner_lib)
 set_target_properties(TechnoRunner PROPERTIES WIN32_EXECUTABLE ON MACOSX_BUNDLE ON)
 
 if(APPLE)
+    # Bundle dir must be "Minecraft.app" (matches the current release) so it replaces
+    # an existing install in place. CMake names the .app and the inner executable after
+    # OUTPUT_NAME, and auto-fills MACOSX_BUNDLE_EXECUTABLE_NAME in the plist accordingly.
     set_target_properties(TechnoRunner PROPERTIES
-        OUTPUT_NAME "glitchless-minecraft"
+        OUTPUT_NAME "Minecraft"
         MACOSX_BUNDLE_BUNDLE_NAME "Minecraft"
-        MACOSX_BUNDLE_EXECUTABLE_NAME "glitchless-minecraft"
         MACOSX_BUNDLE_GUI_IDENTIFIER "ru.glitchless.games"
         MACOSX_BUNDLE_INFO_PLIST "${CMAKE_SOURCE_DIR}/resources/macos/Info.plist.in")
     target_sources(TechnoRunner PRIVATE resources/macos/icon.icns)
