@@ -58,3 +58,6 @@ tprunner_add_test(LauncherDownloaderTest tests/LauncherDownloaderTest.cpp)
 
 target_sources(tprunner_lib PRIVATE src/run/Launcher.cpp)
 tprunner_add_test(LauncherTest tests/LauncherTest.cpp)
+
+target_sources(tprunner_lib PRIVATE src/app/Bootstrapper.cpp)
+tprunner_add_test(BootstrapperTest tests/BootstrapperTest.cpp)
