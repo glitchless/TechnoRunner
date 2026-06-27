@@ -20,6 +20,9 @@ jobs:
           - { os: windows-latest, name: windows-x86_64, arch: x86_64 }
           - { os: macos-14,       name: macos-arm64,    arch: arm64 }
     runs-on: ${{ matrix.os }}
+    # The Windows job compiles a static Qt from source via vcpkg (~1h cold); cap
+    # the job so a wedged build fails fast instead of burning the 6h default.
+    timeout-minutes: 120
     steps:
       - uses: actions/checkout@v4
 
@@ -56,14 +59,43 @@ jobs:
             core.exportVariable('ACTIONS_RESULTS_URL', process.env.ACTIONS_RESULTS_URL || '');
             core.exportVariable('ACTIONS_RUNTIME_TOKEN', process.env.ACTIONS_RUNTIME_TOKEN || '');
 
+      # Reclaim space before the from-source Qt build. windows-2025 runners have
+      # only ~33 GB free on C: and no D: drive, while a static qtbase build's
+      # buildtrees run to tens of GB. Delete preinstalled toolchains this
+      # C++/vcpkg build never touches (Android SDK/NDK, Go, Ruby, PyPy).
+      - name: Free up disk space (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $before = (Get-PSDrive C).Free / 1GB
+          Write-Host ("Free on C: before cleanup: {0:N1} GB" -f $before)
+          $paths = @(
+            'C:\Android',
+            'C:\hostedtoolcache\windows\Go',
+            'C:\hostedtoolcache\windows\Ruby',
+            'C:\hostedtoolcache\windows\PyPy'
+          )
+          foreach ($p in $paths) {
+            if (Test-Path $p) { Remove-Item -Recurse -Force -ErrorAction SilentlyContinue $p }
+          }
+          $after = (Get-PSDrive C).Free / 1GB
+          Write-Host ("Free on C: after cleanup:  {0:N1} GB (reclaimed {1:N1} GB)" -f $after, ($after - $before))
+
       - name: Configure
         shell: bash
         run: |
           if [ "${{ runner.os }}" = "Windows" ]; then
             # Static triplet -> Qt, libarchive and the CRT all link into the exe.
+            # A release-only overlay triplet (VCPKG_BUILD_TYPE release; see
+            # triplets/x64-windows-static.cmake) skips the debug Qt build, roughly
+            # halving disk + time. The clean-after-build flags free each port's
+            # buildtrees/packages the moment it finishes so they don't accumulate.
+            # Together these keep the qtbase compile under the runner's free C:.
             cmake -B build -S . \
               -DCMAKE_TOOLCHAIN_FILE="$VCPKG_INSTALLATION_ROOT/scripts/buildsystems/vcpkg.cmake" \
               -DVCPKG_TARGET_TRIPLET=x64-windows-static \
+              -DVCPKG_OVERLAY_TRIPLETS="$GITHUB_WORKSPACE/triplets" \
+              -DVCPKG_INSTALL_OPTIONS="--clean-buildtrees-after-build;--clean-packages-after-build" \
               -DCMAKE_MSVC_RUNTIME_LIBRARY='MultiThreaded$<$<CONFIG:Debug>:Debug>'
           else
             # macOS auto-detects the keg-only libarchive prefix in CMakeLists.txt.
