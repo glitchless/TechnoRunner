@@ -10,6 +10,7 @@
 #include <QGuiApplication>
 #include <QScreen>
 #include <QCursor>
+#include <QMouseEvent>
 #include <QDebug>
 #include <cstdlib>
 
@@ -83,5 +84,26 @@ int SplashScreen::progressValue() const { return bar_->value(); }
 void SplashScreen::onStatus(const QString& status) { label_->setText(status); }
 void SplashScreen::onProgress(int progress) { bar_->setValue(progress); }
 void SplashScreen::onMax(int max) { bar_->setMaximum(max); }
+
+// Drag-to-move: record the cursor's offset from the window origin on press, then keep
+// the window at (cursor - offset) while dragging. Child widgets that ignore mouse events
+// (the background QLabel, the status panel) propagate the press up to here; the close
+// QPushButton consumes its own clicks, so it stays clickable.
+void SplashScreen::mousePressEvent(QMouseEvent* e) {
+    if (e->button() == Qt::LeftButton) {
+        dragging_ = true;
+        dragOffset_ = e->globalPosition().toPoint() - frameGeometry().topLeft();
+        e->accept();
+    }
+}
+void SplashScreen::mouseMoveEvent(QMouseEvent* e) {
+    if (dragging_ && (e->buttons() & Qt::LeftButton)) {
+        move(e->globalPosition().toPoint() - dragOffset_);
+        e->accept();
+    }
+}
+void SplashScreen::mouseReleaseEvent(QMouseEvent* e) {
+    if (e->button() == Qt::LeftButton) { dragging_ = false; e->accept(); }
+}
 
 }
