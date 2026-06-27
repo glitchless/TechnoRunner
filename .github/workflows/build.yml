@@ -20,9 +20,10 @@ jobs:
           - { os: windows-latest, name: windows-x86_64, arch: x86_64 }
           - { os: macos-14,       name: macos-arm64,    arch: arm64 }
     runs-on: ${{ matrix.os }}
-    # The Windows job compiles a static Qt from source via vcpkg (~1h cold); cap
-    # the job so a wedged build fails fast instead of burning the 6h default.
-    timeout-minutes: 120
+    # The Windows job compiles a static Qt from source via vcpkg (cold, no usable
+    # binary cache yet); cap the job so a wedged build fails fast instead of
+    # burning the 6h default, with headroom above the observed ~90min cold build.
+    timeout-minutes: 150
     steps:
       - uses: actions/checkout@v4
 
