@@ -67,13 +67,15 @@ enable_testing()
 function(tprunner_add_test name)
     qt_add_executable(${name} ${ARGN})
     target_link_libraries(${name} PRIVATE tprunner_lib Qt6::Test)
-    # Tests run headless (QT_QPA_PLATFORM=offscreen). The offscreen platform plugin
-    # is NOT one of Qt's default-imported static plugins, so a static build must
-    # import it or the test aborts with "no Qt platform plugin could be initialized".
+    # A static Qt links QPA platform plugins into the binary instead of loading them
+    # from disk, so they must be imported explicitly. vcpkg's static qtbase only
+    # builds the native "windows" platform plugin (offscreen/minimal are not in its
+    # QT_QPA_PLATFORMS), so the Windows tests use the windows platform like the app
+    # does -- run with QT_QPA_PLATFORM=windows (see the Test step in build.yml).
     # QJpegPlugin is needed by SplashScreenTest, which loads background.jpeg.
     if(WIN32 AND NOT QT6_IS_SHARED_LIBS_BUILD)
         qt_import_plugins(${name} INCLUDE
-            Qt6::QOffscreenIntegrationPlugin
+            Qt6::QWindowsIntegrationPlugin
             Qt6::QJpegPlugin)
     endif()
     add_test(NAME ${name} COMMAND ${name})

@@ -114,7 +114,10 @@ jobs:
         # the log, instead of blocking until the job timeout.
         run: ctest --test-dir build -C Release --output-on-failure --timeout 120
         env:
-          QT_QPA_PLATFORM: offscreen
+          # Linux/macOS use the prebuilt Qt's offscreen platform. vcpkg's static Qt
+          # on Windows only ships the native "windows" QPA plugin (no offscreen), so
+          # the Windows tests run on it -- they only build widgets, never show them.
+          QT_QPA_PLATFORM: ${{ runner.os == 'Windows' && 'windows' || 'offscreen' }}
 
       - name: Package (Linux AppImage)
         if: runner.os == 'Linux'
