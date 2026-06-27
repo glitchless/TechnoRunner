@@ -7,11 +7,13 @@ on:
 
 jobs:
   build:
-    # vcpkg binary caching via the GitHub Actions cache backend. Only the Windows
-    # job uses vcpkg, so this is a no-op elsewhere. Cache misses or backend errors
-    # are non-fatal: vcpkg falls back to building from source.
+    # vcpkg writes its compiled packages (the static Qt) to a files binary cache
+    # under the workspace; the actions/cache step below persists it across runs so
+    # only the first build compiles Qt from source. The old x-gha provider was
+    # removed from vcpkg-tool, so it never populated. Only the Windows job uses
+    # vcpkg; Linux/macOS set this too but never invoke it (harmless no-op).
     env:
-      VCPKG_BINARY_SOURCES: "clear;x-gha,readwrite"
+      VCPKG_BINARY_SOURCES: "clear;files,${{ github.workspace }}/vcpkg_cache,readwrite"
     strategy:
       fail-fast: false
       matrix:
@@ -20,9 +22,9 @@ jobs:
           - { os: windows-latest, name: windows-x86_64, arch: x86_64 }
           - { os: macos-14,       name: macos-arm64,    arch: arm64 }
     runs-on: ${{ matrix.os }}
-    # The Windows job compiles a static Qt from source via vcpkg (cold, no usable
-    # binary cache yet); cap the job so a wedged build fails fast instead of
-    # burning the 6h default, with headroom above the observed ~90min cold build.
+    # The Windows job compiles a static Qt from source via vcpkg on a cold cache
+    # (~75min); cap the job so a wedged build fails fast instead of burning the 6h
+    # default. Cache hits restore Qt and finish in minutes, well under this.
     timeout-minutes: 150
     steps:
       - uses: actions/checkout@v4
@@ -48,17 +50,18 @@ jobs:
       # vcpkg CMake toolchain auto-installs them at configure time (with a
       # triplet matching the build), so no explicit `vcpkg install` step is needed.
 
-      # Expose the GitHub Actions cache backend to vcpkg's x-gha binary cache
-      # (see VCPKG_BINARY_SOURCES above). Both URL var names are exported to
-      # cover old and new Actions cache services.
-      - name: Export Actions cache env for vcpkg (Windows)
+      # Persist vcpkg's files binary cache (the compiled static Qt) across runs.
+      # Keyed on the manifest + triplets, so it restores until those change; the
+      # first run seeds it (the post-step saves even if a later step fails), after
+      # which Configure restores Qt instead of recompiling it (~75min -> minutes).
+      - name: Cache vcpkg binary archives (Windows)
         if: runner.os == 'Windows'
-        uses: actions/github-script@v7
+        uses: actions/cache@v4
         with:
-          script: |
-            core.exportVariable('ACTIONS_CACHE_URL', process.env.ACTIONS_CACHE_URL || '');
-            core.exportVariable('ACTIONS_RESULTS_URL', process.env.ACTIONS_RESULTS_URL || '');
-            core.exportVariable('ACTIONS_RUNTIME_TOKEN', process.env.ACTIONS_RUNTIME_TOKEN || '');
+          path: ${{ github.workspace }}/vcpkg_cache
+          key: vcpkg-${{ runner.os }}-${{ hashFiles('vcpkg.json', 'triplets/**') }}
+          restore-keys: |
+            vcpkg-${{ runner.os }}-
 
       # Reclaim space before the from-source Qt build. windows-2025 runners have
       # only ~33 GB free on C: and no D: drive, while a static qtbase build's
