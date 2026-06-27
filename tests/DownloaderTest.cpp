@@ -3,6 +3,7 @@
 #include <QTcpSocket>
 #include <QTemporaryDir>
 #include <QNetworkAccessManager>
+#include <QNetworkProxy>
 #include <QFile>
 #include "net/Downloader.h"
 #include "app/ProgressMonitor.h"
@@ -48,13 +49,16 @@ class DownloaderTest : public QObject {
 private slots:
     void httpGetReturnsBody() {
         StubServer srv; srv.body = "hello-body"; QVERIFY(srv.start());
-        QNetworkAccessManager nam; Downloader dl(&nam);
+        QNetworkAccessManager nam; nam.setProxy(QNetworkProxy::NoProxy); Downloader dl(&nam);
+        // NoProxy: these tests only hit localhost. On Windows, a fresh QNAM's
+        // first request otherwise triggers system-proxy (WPAD) auto-detection,
+        // which stalls for minutes on CI runners that have no WPAD server.
         const QByteArray out = dl.httpGet(QString("http://127.0.0.1:%1/x").arg(srv.port()));
         QCOMPARE(out, QByteArray("hello-body"));
     }
     void downloadToFileWritesAndReportsProgress() {
         StubServer srv; srv.body = QByteArray(2048, 'z'); QVERIFY(srv.start());
-        QNetworkAccessManager nam; Downloader dl(&nam);
+        QNetworkAccessManager nam; nam.setProxy(QNetworkProxy::NoProxy); Downloader dl(&nam);
         QTemporaryDir dir; const QString dest = dir.path() + "/out.bin";
         RecordingMonitor mon;
         dl.downloadToFile(QString("http://127.0.0.1:%1/x").arg(srv.port()), dest, &mon);
@@ -64,7 +68,7 @@ private slots:
         QVERIFY(mon.lastProgress > 0);
     }
     void httpGetOnConnectionRefusedThrows() {
-        QNetworkAccessManager nam; Downloader dl(&nam);
+        QNetworkAccessManager nam; nam.setProxy(QNetworkProxy::NoProxy); Downloader dl(&nam);
         QVERIFY_EXCEPTION_THROWN(dl.httpGet("http://127.0.0.1:1/nope"), std::runtime_error);
     }
 };

@@ -109,7 +109,10 @@ jobs:
       - name: Test
         # -C Release is required for multi-config generators (Visual Studio on
         # Windows); ignored harmlessly by single-config generators (Linux/macOS).
-        run: ctest --test-dir build -C Release --output-on-failure
+        # --timeout 120 bounds each test: a hung test (e.g. a network call
+        # stalling on Windows proxy auto-detection) fails fast and is named in
+        # the log, instead of blocking until the job timeout.
+        run: ctest --test-dir build -C Release --output-on-failure --timeout 120
         env:
           QT_QPA_PLATFORM: offscreen
 
