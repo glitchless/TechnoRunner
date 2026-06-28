@@ -1,4 +1,12 @@
 # Created by .ignore support plugin (hsz.mobi)
+
+# Qt/CMake build output
+/build/
+/vcpkg_installed/
+
+# Staged JRE archives (uploaded to the server's jres/ folder; not committed)
+/jres/
+
 ### Linux template
 *~
 

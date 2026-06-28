@@ -1,0 +1,204 @@
+name: build
+on:
+  push:
+    branches: [ master ]
+    tags: [ 'v*' ]
+  pull_request:
+
+jobs:
+  build:
+    # vcpkg writes its compiled packages (the static Qt) to a files binary cache
+    # under the workspace; the actions/cache step below persists it across runs so
+    # only the first build compiles Qt from source. The old x-gha provider was
+    # removed from vcpkg-tool, so it never populated. Only the Windows job uses
+    # vcpkg; Linux/macOS set this too but never invoke it (harmless no-op).
+    env:
+      VCPKG_BINARY_SOURCES: "clear;files,${{ github.workspace }}/vcpkg_cache,readwrite"
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { os: ubuntu-latest,  name: linux-x86_64,  arch: x86_64 }
+          - { os: windows-latest, name: windows-x86_64, arch: x86_64 }
+          - { os: macos-14,       name: macos-arm64,    arch: arm64 }
+    runs-on: ${{ matrix.os }}
+    # The Windows job compiles a static Qt from source via vcpkg on a cold cache
+    # (~75min); cap the job so a wedged build fails fast instead of burning the 6h
+    # default. Cache hits restore Qt and finish in minutes, well under this.
+    timeout-minutes: 150
+    steps:
+      - uses: actions/checkout@v4
+
+      # Windows gets a static Qt from vcpkg (see vcpkg.json) for a single-exe
+      # build; Linux/macOS use the prebuilt dynamic Qt from aqt.
+      - name: Install Qt
+        if: runner.os != 'Windows'
+        uses: jurplel/install-qt-action@v4
+        with:
+          version: '6.8.*'
+          cache: true
+
+      - name: Install libarchive (Linux)
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y libarchive-dev libfuse2 imagemagick
+
+      - name: Install libarchive (macOS)
+        if: runner.os == 'macOS'
+        run: brew install libarchive
+
+      # Windows deps come from the vcpkg.json manifest. In manifest mode the
+      # vcpkg CMake toolchain auto-installs them at configure time (with a
+      # triplet matching the build), so no explicit `vcpkg install` step is needed.
+
+      # Persist vcpkg's files binary cache (the compiled static Qt) across runs.
+      # Keyed on the manifest + triplets, so it restores until those change; the
+      # first run seeds it (the post-step saves even if a later step fails), after
+      # which Configure restores Qt instead of recompiling it (~75min -> minutes).
+      - name: Cache vcpkg binary archives (Windows)
+        if: runner.os == 'Windows'
+        uses: actions/cache@v4
+        with:
+          path: ${{ github.workspace }}/vcpkg_cache
+          key: vcpkg-${{ runner.os }}-${{ hashFiles('vcpkg.json', 'triplets/**') }}
+          restore-keys: |
+            vcpkg-${{ runner.os }}-
+
+      # Reclaim space before the from-source Qt build. windows-2025 runners have
+      # only ~33 GB free on C: and no D: drive, while a static qtbase build's
+      # buildtrees run to tens of GB. Delete preinstalled toolchains this
+      # C++/vcpkg build never touches (Android SDK/NDK, Go, Ruby, PyPy).
+      - name: Free up disk space (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $before = (Get-PSDrive C).Free / 1GB
+          Write-Host ("Free on C: before cleanup: {0:N1} GB" -f $before)
+          $paths = @(
+            'C:\Android',
+            'C:\hostedtoolcache\windows\Go',
+            'C:\hostedtoolcache\windows\Ruby',
+            'C:\hostedtoolcache\windows\PyPy'
+          )
+          foreach ($p in $paths) {
+            if (Test-Path $p) { Remove-Item -Recurse -Force -ErrorAction SilentlyContinue $p }
+          }
+          $after = (Get-PSDrive C).Free / 1GB
+          Write-Host ("Free on C: after cleanup:  {0:N1} GB (reclaimed {1:N1} GB)" -f $after, ($after - $before))
+
+      - name: Configure
+        shell: bash
+        run: |
+          if [ "${{ runner.os }}" = "Windows" ]; then
+            # Static triplet -> Qt, libarchive and the CRT all link into the exe.
+            # A release-only overlay triplet (VCPKG_BUILD_TYPE release; see
+            # triplets/x64-windows-static.cmake) skips the debug Qt build, roughly
+            # halving disk + time. The clean-after-build flags free each port's
+            # buildtrees/packages the moment it finishes so they don't accumulate.
+            # Together these keep the qtbase compile under the runner's free C:.
+            cmake -B build -S . \
+              -DCMAKE_TOOLCHAIN_FILE="$VCPKG_INSTALLATION_ROOT/scripts/buildsystems/vcpkg.cmake" \
+              -DVCPKG_TARGET_TRIPLET=x64-windows-static \
+              -DVCPKG_OVERLAY_TRIPLETS="$GITHUB_WORKSPACE/triplets" \
+              -DVCPKG_INSTALL_OPTIONS="--clean-buildtrees-after-build;--clean-packages-after-build" \
+              -DCMAKE_MSVC_RUNTIME_LIBRARY='MultiThreaded$<$<CONFIG:Debug>:Debug>'
+          else
+            # macOS auto-detects the keg-only libarchive prefix in CMakeLists.txt.
+            cmake -B build -S .
+          fi
+
+      - name: Build
+        run: cmake --build build --config Release
+
+      - name: Test
+        # -C Release is required for multi-config generators (Visual Studio on
+        # Windows); ignored harmlessly by single-config generators (Linux/macOS).
+        # --timeout 120 bounds each test: a hung test (e.g. a network call
+        # stalling on Windows proxy auto-detection) fails fast and is named in
+        # the log, instead of blocking until the job timeout.
+        run: ctest --test-dir build -C Release --output-on-failure --timeout 120
+        env:
+          # Linux/macOS use the prebuilt Qt's offscreen platform. vcpkg's static Qt
+          # on Windows only ships the native "windows" QPA plugin (no offscreen), so
+          # the Windows tests run on it -- they only build widgets, never show them.
+          QT_QPA_PLATFORM: ${{ runner.os == 'Windows' && 'windows' || 'offscreen' }}
+
+      - name: Package (Linux AppImage)
+        if: runner.os == 'Linux'
+        run: |
+          curl -fsSLO https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-x86_64.AppImage
+          curl -fsSLO https://github.com/linuxdeploy/linuxdeploy-plugin-qt/releases/download/continuous/linuxdeploy-plugin-qt-x86_64.AppImage
+          chmod +x linuxdeploy*.AppImage
+          mkdir -p AppDir/usr/bin && cp build/TechnoRunner AppDir/usr/bin/
+          mkdir -p AppDir/usr/share/applications AppDir/usr/share/icons/hicolor/256x256/apps
+          printf '[Desktop Entry]\nType=Application\nName=TechnoRunner\nExec=TechnoRunner\nIcon=technorunner\nCategories=Game;\n' > AppDir/usr/share/applications/technorunner.desktop
+          convert resources/background.jpeg -resize 256x256! AppDir/usr/share/icons/hicolor/256x256/apps/technorunner.png
+          ./linuxdeploy-x86_64.AppImage --appdir AppDir --plugin qt --output appimage
+          mv TechnoRunner*.AppImage TechnoRunner-${{ matrix.name }}.AppImage
+
+      - name: Package (macOS dmg)
+        if: runner.os == 'macOS'
+        run: |
+          # Deploy Qt frameworks + the keg-only libarchive (and its lz4/lzma/zstd/b2
+          # deps) into the bundle. macdeployqt rewrites their install-names with
+          # install_name_tool, which mutates each Mach-O and invalidates its embedded
+          # ad-hoc code signature. On Apple Silicon the kernel SIGKILLs any process
+          # that maps an invalidly-signed dylib (dyld dies before main() with
+          # "Code Signature Invalid"), so the bundle MUST be re-signed afterwards.
+          macdeployqt build/Minecraft.app
+
+          # Re-sign the whole bundle (ad-hoc) as the very last mutation, so no later
+          # install_name_tool pass can invalidate it again, then hard-verify. The
+          # --strict verify fails the build if anything is still mis-signed, so a
+          # launch-broken artifact can never ship again.
+          codesign --force --deep --sign - build/Minecraft.app
+          codesign --verify --deep --strict --verbose=2 build/Minecraft.app
+
+          # Build the dmg from the verified bundle. We can't use `macdeployqt -dmg`:
+          # it packages the app before our re-sign step can run. Stage an /Applications
+          # symlink so the dmg offers the usual drag-to-install layout.
+          staging="$(mktemp -d)"
+          ditto build/Minecraft.app "$staging/Minecraft.app"
+          ln -s /Applications "$staging/Applications"
+          hdiutil create -volname Minecraft -srcfolder "$staging" \
+            -ov -format UDZO TechnoRunner-${{ matrix.name }}.dmg
+
+      - name: Package (Windows exe)
+        if: runner.os == 'Windows'
+        shell: bash
+        run: |
+          # Fully static build (static Qt + libarchive + CRT): the exe has no
+          # external DLL dependencies, so it ships as a single self-contained file.
+          cp build/Release/TechnoRunner.exe TechnoRunner-${{ matrix.name }}.exe
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: TechnoRunner-${{ matrix.name }}
+          path: |
+            TechnoRunner-*.AppImage
+            TechnoRunner-*.dmg
+            TechnoRunner-*.exe
+
+      - name: Release on tag
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          # Static across the matrix jobs (last writer wins with identical content).
+          body: |
+            ### macOS — first launch
+
+            The `.dmg` app is ad-hoc signed but **not notarized**, so on first launch
+            macOS Gatekeeper blocks it (it may report the app as "damaged" or "from an
+            unidentified developer"). After dragging it to **Applications**, remove the
+            download quarantine flag once:
+
+            ```bash
+            xattr -cr /Applications/Minecraft.app
+            ```
+
+            Then open it normally. (Right-clicking the app and choosing **Open** also
+            works on most macOS versions.)
+          files: |
+            TechnoRunner-*.AppImage
+            TechnoRunner-*.dmg
+            TechnoRunner-*.exe
